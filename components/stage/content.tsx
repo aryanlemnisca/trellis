@@ -31,6 +31,11 @@ export type Beat = {
   cards?: Card[];
   /** Stages walked one at a time while the beat's copy is pinned. */
   stages?: Stage[];
+  /**
+   * A standalone drawing, shown without the landscape under it. Distinct
+   * from `overlay`, which mounts the surface as well.
+   */
+  art?: string;
 };
 
 export type Stage = {
@@ -195,6 +200,7 @@ export const BEATS: Beat[] = [
   {
     id: "hero",
     overlay: null,
+    art: "/illustration/path-light.png",
     readout: null,
   },
   {

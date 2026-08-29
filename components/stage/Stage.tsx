@@ -290,15 +290,18 @@ export function Stage() {
             {/* Overlays: only the incoming and outgoing are mounted, and
                 a mounted layer is a sampled layer. */}
             {layers.map((index, slot) => {
-              const overlay = BEATS[index ?? 0].overlay;
-              if (index === null || overlay === null) return null;
+              if (index === null) return null;
+              // `overlay` sits on the landscape, `art` stands alone; both
+              // go through the same two-slot wipe.
+              const src = BEATS[index].overlay ?? BEATS[index].art ?? null;
+              if (src === null) return null;
               return (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   key={BEATS[index].id}
-                  src={overlay}
-                  alt=""
-                  aria-hidden
+                  src={src}
+                  alt={BEATS[index].art ? HERO_ALT : ""}
+                  aria-hidden={!BEATS[index].art}
                   data-active={slot === 0}
                   className="stage-art stage-overlay"
                 />
@@ -479,11 +482,14 @@ function HeroCopy() {
       </div>
 
       {/* Stacked hero panel. */}
-      <div
-        aria-hidden
-        className="stage-hero-panel absolute inset-x-0 top-0 h-[34dvh] overflow-hidden rounded-b-[36px] bg-board lg:hidden"
-      >
-        <div className="stage-grid absolute inset-0" />
+      <div className="stage-hero-panel absolute inset-x-0 top-0 h-[34dvh] overflow-hidden rounded-b-[36px] bg-board lg:hidden">
+        <div aria-hidden className="stage-grid absolute inset-0" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/illustration/path-light.png"
+          alt={HERO_ALT}
+          className="absolute inset-0 h-full w-full object-contain p-5"
+        />
       </div>
     </div>
   );
