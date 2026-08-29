@@ -1,26 +1,437 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Monochrome, plus one surface colour: `board`, the dark field the
+     stage panel draws on. Kept separate from `ink` so surface and type
+     move independently — and matched by hand to `BOARD` in
+     scripts/build-scenes.py, which paints it into the loop overlay. */
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+  --color-ink-900: #0a0a0a;
+  --color-ink-700: #262626;
+  --color-ink-500: #737373;
+  --color-ink-300: #d4d4d4;
+  --color-ink-100: #f5f5f5;
+  --color-board: #000000;
+}
+
+/* Registered so they interpolate — an unregistered custom property is
+   a token soup to the engine and can't be transitioned. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --grid-line: color-mix(in srgb, var(--color-paper) 20%, transparent);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* ── Liquid glass ────────────────────────────────────────────────────
+   A glass panel paints nothing itself in WebGL mode: the injected
+   <canvas> carries the whole surface. `isolation` keeps that z-index:-1
+   canvas inside the panel's stacking context — without it the canvas can
+   slip behind an ancestor's background and disappear. Positioning is
+   deliberately NOT set here: the library promotes `static` panels to
+   `relative` itself, and a rule on [data-glass] would out-specify
+   Tailwind's `absolute`.                                              */
+
+[data-glass] {
+  isolation: isolate;
+}
+
+[data-glass] > canvas {
+  border-radius: inherit;
+}
+
+[data-glass-mode="css"] [data-glass] {
+  background: color-mix(in srgb, var(--color-paper) 16%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-paper) 26%, transparent);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-glass-mode="css"] [data-glass] {
+    background: color-mix(in srgb, var(--color-ink) 45%, transparent);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ── Stage ───────────────────────────────────────────────────────────
+   `--e` is the expansion progress (0 → 1), written once per frame by
+   Stage.tsx; `--cz/--cx/--cy` are the camera, set per beat. Everything
+   below derives from those, so scrolling touches no React state.
+
+   At --e: 0 the panel is the hero's resting geometry — right column,
+   52vw, full height, 48px left radius. At --e: 1 it is a box inset from
+   the viewport, and the field has turned from board to paper.         */
+
+.stage {
+  --e: 0;
+  --p: 0;
+  /* Transitioned here, at the source: the camera values inherit down to
+     .stage-art, so animating them once on the section drives the
+     transform without every descendant running its own transition. */
+  /* Artwork geometry, in one place. Every scene shares the hero's
+     1663 / 870 = 1.9115 box, so they all drop into this same slot.
+     Width-bound: the panel is 52vw, so this is close to as large as the
+     drawing goes without being cropped. */
+  --art-w: 49vw;
+  --art-h: 25.634vw;
+  --art-left: 1.5vw;
+}
+
+.stage-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+@media (min-width: 1024px) {
+  .stage-panel {
+    left: calc(48vw - 46vw * var(--e));
+    right: calc(2vw * var(--e));
+    top: calc(3vh * var(--e));
+    bottom: calc(3vh * var(--e));
+    border-top-left-radius: calc(48px - 8px * var(--e));
+    border-bottom-left-radius: calc(48px - 8px * var(--e));
+    border-top-right-radius: calc(40px * var(--e));
+    border-bottom-right-radius: calc(40px * var(--e));
+    animation: stage-panel-settle 1500ms cubic-bezier(0.65, 0, 0.35, 1) 250ms
+      both;
+    transform-origin: center;
+    will-change: transform;
+  }
+
+  .stage-backdrop {
+    background-color: var(--color-board);
+    background-color: color-mix(
+      in srgb,
+      var(--color-paper) calc(var(--e) * 100%),
+      var(--color-board)
+    );
+  }
+
+  .stage-grid {
+    opacity: calc(1 - var(--e));
+  }
+
+  .stage-copy {
+    opacity: clamp(0, calc(1 - var(--e) * 2.4), 1);
+  }
+
+  /* The landscape holds for all four chapters; only the hero is bare. */
+  .stage-surface,
+  .stage-overlay {
+    opacity: clamp(0, calc(1 - var(--e) * 2.5), 1);
+  }
+
+  .stage-overlay[data-active="false"] {
+    /* Exits faster than it entered, so the incoming layer leads. */
+    opacity: 0;
+    transition: opacity 320ms cubic-bezier(0.4, 0, 1, 1);
+  }
+
+  /* Ink reprise of the hero drawing: slides in from the right and
+     settles as the box opens, driven by the same scroll progress. */
+  /* Selector doubled on purpose: the base `.stage-art` rule is declared
+     later in this file with the same specificity, and would otherwise
+     win the transform and cancel the slide. */
+  .stage-art.stage-art-ink {
+    display: none;
+    opacity: clamp(0, calc((var(--e) - 0.28) * 1.5), 0.42);
+    transform: translateX(calc(26vw * (1 - var(--e))))
+      scale(calc(0.94 + 0.62 * var(--e)));
+  }
+
+  .stage[data-opening="true"] .stage-art.stage-art-ink {
+    display: block;
+  }
+
+  /* Anchored to the artwork, not the panel, so it overlaps the drawing's
+     lower edge at any viewport shape — glass wants something behind it. */
+  /* Faded with a transition rather than an entrance animation. An
+     animation's fill overrides the opacity declared here, so the old
+     `hero-rise` delay made the empty panel fade itself back in over the
+     hero for 620ms before snapping away again. */
+  .stage-readout {
+    left: 2vw;
+    top: calc(50% + (var(--art-h) / 2) - 5rem);
+    opacity: clamp(0, calc(1 - var(--e) * 2.6), 1);
+    transition: opacity 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Hidden wherever the beat carries no readout. Keyed off the section,
+     not the panel: <Glass> routes unrecognised props into the glass
+     config rather than onto the element, so a data-* attribute set on it
+     never reaches the DOM. */
+  .stage[data-readout="false"] .stage-readout {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ── Card panels ───────────────────────────────────────────────────
+     Revealed by scroll position, not a timer: each card crosses its own
+     threshold in `--p` as the reader moves through the chapter, so the
+     three arrive in sequence and hold wherever the reader stops.
+
+     `translate` parks them off the board when their beat isn't active
+     and `transform` carries the reveal — two independent properties, so
+     neither has to know about the other. Parking rather than unmounting
+     keeps the glass panel set constant (a changed set re-initialises the
+     whole scene) and keeps them out of the readout's sampled scene,
+     which ignores opacity. */
+  .stage-card {
+    --reveal: clamp(0, calc((var(--p) - var(--i) * 0.13 - 0.02) * 5.5), 1);
+    top: calc(6% + var(--i) * 30%);
+    opacity: calc(var(--reveal) * clamp(0, calc(1 - var(--e) * 2.5), 1));
+    transform: translateY(calc(30px * (1 - var(--reveal))));
+    translate: 135% 0;
+    transition: translate 520ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .stage[data-beat="problem"] .stage-card {
+    translate: 0 0;
+  }
+
+  /* ── Loop stages ───────────────────────────────────────────────────
+     The node layer is laid over the artwork's exact box, so percentage
+     positions from loop-geometry.json land on the drawn ring. */
+  .stage-loop {
+    left: var(--art-left);
+    top: 50%;
+    width: var(--art-w);
+    height: var(--art-h);
+    translate: 0 -50%;
+    opacity: clamp(0, calc(1 - var(--e) * 2.5), 1);
+  }
+
+  .stage-node {
+    translate: -50% -50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition:
+      opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
+      scale 420ms cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 0.42;
+  }
+
+  .stage-node[data-active="true"] {
+    opacity: 1;
+    scale: 1.12;
+  }
+
+  .stage-node-ring {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: var(--color-board);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-paper) 70%, transparent);
+    transition: box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .stage-node[data-active="true"] .stage-node-ring {
+    box-shadow:
+      inset 0 0 0 2px var(--color-paper),
+      0 0 0 6px color-mix(in srgb, var(--color-paper) 12%, transparent);
+  }
+
+  .stage-node-label {
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-paper);
+    white-space: nowrap;
+  }
+
+  .stage-hub {
+    translate: -50% -50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+  }
+
+  .stage-caption {
+    translate: -50% 1.75rem;
+    max-width: 22rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--color-paper) 70%, transparent);
+  }
+
+  .stage-closing {
+    opacity: clamp(0, calc((var(--e) - 0.55) * 2.6), 1);
+    transform: translateY(calc(16px * (1 - var(--e))));
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Flipped once, by Stage.tsx, when the box is essentially open — keeps
+     the closing links out of the tab order until they're real. */
+  .stage[data-expanded="true"] .stage-closing {
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+/* The panel is laid out at its resting geometry and given an inverse
+   transform to start from, so the entrance animates transform only.
+   scale = 100/52 = 1.9231; translateX = 50 − 74 = −24vw. */
+@keyframes stage-panel-settle {
+  0% {
+    transform: translateX(-24vw) scale(1.9231);
+  }
+  45% {
+    transform: translateX(-24vw) scale(1.06);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* The artwork sits whole in the panel — contained, never cropped — and
+   only scales up as the box opens. */
+.stage-art {
+  position: absolute;
+  top: 50%;
+  left: var(--art-left);
+  width: var(--art-w);
+  height: auto;
+  max-width: none;
+  translate: 0 -50%;
+  transform-origin: 50% 50%;
+  transform: scale(calc(1 + 0.55 * var(--e)));
+  will-change: transform;
+}
+
+/* Beat changes are a wipe, not a crossfade. The landscape underneath is
+   continuous, so the incoming overlay draws itself on left-to-right over
+   the one already there — plate end first, production end last, which is
+   the direction every scene reads in. Deliberately slow: a ~300ms
+   crossfade of two similar wireframes registers as a flicker, not a
+   change of subject. */
+.stage-surface,
+.stage-overlay {
+  clip-path: inset(0 0 0 0);
+  transition:
+    opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    clip-path 1000ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@starting-style {
+  .stage-surface,
+  .stage-overlay {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+/* ── Stacked hero panel ──────────────────────────────────────────────
+   Same inverse-transform trick, sized for a 100vw × 34dvh panel flush to
+   the top: scale = 100/34 = 2.9412, translateY = 50 − 17 = 33dvh.     */
+
+@media (max-width: 1023.98px) {
+  .stage-hero-panel {
+    transform-origin: center;
+    will-change: transform;
+    animation: stage-hero-panel-settle 1500ms cubic-bezier(0.65, 0, 0.35, 1)
+      250ms both;
+  }
+}
+
+@keyframes stage-hero-panel-settle {
+  0% {
+    transform: translateY(33dvh) scale(2.9412);
+  }
+  45% {
+    transform: translateY(33dvh) scale(1.06);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hero-rise {
+  animation: hero-rise 620ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  animation-delay: calc(1080ms + var(--i, 0) * 80ms);
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── FAQ ─────────────────────────────────────────────────────────── */
+
+.faq-plus::before,
+.faq-plus::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-plus::after {
+  transform: rotate(90deg);
+}
+
+.faq-plus[data-open="true"]::after {
+  transform: rotate(180deg);
+}
+
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-panel,
+  .stage-hero-panel,
+  .hero-rise,
+  .stage-readout {
+    animation: none;
+  }
+
+  .stage-art,
+  .stage-surface,
+  .stage-overlay,
+  .faq-panel,
+  .faq-plus::before,
+  .faq-plus::after {
+    transition: none;
+  }
+
+  .stage-card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
