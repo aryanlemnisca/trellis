@@ -52,7 +52,6 @@ body {
 [data-glass-mode="css"] [data-glass] {
   background: color-mix(in srgb, var(--color-paper) 16%, transparent);
   backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-paper) 26%, transparent);
 }
 
@@ -60,22 +59,146 @@ body {
   [data-glass-mode="css"] [data-glass] {
     background: color-mix(in srgb, var(--color-ink) 45%, transparent);
     backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 }
 
+/* ── Glass buttons ───────────────────────────────────────────────────
+   A control gets its own scene (see GlassButton) because the renderer
+   only samples a root's own children — a button nested in a section can
+   never join the board's scene. The panel paints nothing here either;
+   the label carries the padding and sizes the pill.
+
+   52px tall against the recipes' `cornerRadius: 50` / `zRadius: 40` —
+   the demo's own numbers — puts nearly the whole face inside the bevel,
+   which is where the lens comes from. border-radius clamps itself to
+   half the height, so the pill stays a pill.
+
+   `.glass-button-slab` is the default surface a button brings with it.
+   The glass darkens and bends what is behind it, and on this site that
+   is flat white — nothing to darken, nothing to bend, which renders a
+   grey lozenge. The reference sits on a photograph; this is the
+   monochrome equivalent, a lit top-left falling away to near-black, so
+   the bevel has real tone to work with.                              */
+
+.glass-button {
+  min-height: 52px;
+}
+
+.glass-button-slab {
+  background: radial-gradient(
+    132% 190% at 22% 4%,
+    var(--color-ink-300) 0%,
+    var(--color-ink-500) 26%,
+    var(--color-ink-700) 62%,
+    var(--color-ink-900) 100%
+  );
+}
+
+.glass-button-label {
+  white-space: nowrap;
+}
+
+.glass-button-scene :focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 5px;
+  border-radius: 999px;
+}
+
+/* The generic CSS fallback is a light frost, which would render a
+   `dark` button as its own opposite wherever WebGL is unavailable. */
+
+[data-glass-mode="css"] [data-glass][data-variant="dark"] {
+  background: color-mix(in srgb, var(--color-ink) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-paper) 18%, transparent);
+}
+
+[data-glass-mode="css"] [data-glass][data-variant="frosted"] {
+  background: color-mix(in srgb, var(--color-paper) 62%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 12%, transparent);
+}
+
+[data-glass-mode="css"] [data-glass][data-variant="regular"] {
+  background: color-mix(in srgb, var(--color-paper) 22%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 14%, transparent);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-glass-mode="css"] [data-glass][data-variant="dark"] {
+    background: var(--color-ink);
+    backdrop-filter: none;
+  }
+}
+
+/* ── Eyebrow ─────────────────────────────────────────────────────────
+   The section label, in a frosted pill.
+
+   Not liquid glass, and it can't be: these sit on the white sections,
+   where the shader has nothing behind it to bend, and a panel this
+   small would be swallowed whole by the spec's zRadius. The frost is a
+   wash of ink, a hairline, a light catch along the top edge, and a
+   backdrop blur for anything that passes under it.
+
+   Asymmetric padding on purpose — uppercase tracking hangs a space off
+   the last letter, so the right side is trimmed to match the left. */
+
+.eyebrow {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.5rem 0.9375rem 0.5rem 1.125rem;
+  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
+  backdrop-filter: blur(14px) saturate(1.35);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 9%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-paper) 85%, transparent),
+    0 1px 2px color-mix(in srgb, var(--color-ink) 5%, transparent);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-ink-700);
+}
+
+/* On the board the same pill has to invert: a wash of paper, a paper
+   hairline, paper type. Same shape, opposite ground. */
+.eyebrow-board {
+  background: color-mix(in srgb, var(--color-paper) 8%, transparent);
+  backdrop-filter: blur(16px) saturate(1.1);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-paper) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-paper) 22%, transparent);
+  color: color-mix(in srgb, var(--color-paper) 80%, transparent);
+}
+
 /* ── Stage ───────────────────────────────────────────────────────────
-   `--e` is the expansion progress (0 → 1), written once per frame by
-   Stage.tsx; `--cz/--cx/--cy` are the camera, set per beat. Everything
-   below derives from those, so scrolling touches no React state.
+   `--e` is the closing shift's progress (0 → 1), written once per frame
+   by Stage.tsx. Everything below derives from it and from the per-chapter
+   `--p1/--p2/--p3`, so scrolling touches no React state.
 
    At --e: 0 the panel is the hero's resting geometry — right column,
-   52vw, full height, 48px left radius. At --e: 1 it is a box inset from
-   the viewport, and the field has turned from board to paper.         */
+   52vw, full height, flush to the viewport edge. At --e: 1 it has
+   shifted into a rounded box inset from the page. The FIELD DOES NOT
+   CHANGE: it is the board the whole way through, grid and all. The
+   close is a change of shape, not of colour.                          */
 
 .stage {
   --e: 0;
-  --p: 0;
+  /* Each chapter's own progress, published every frame whatever the
+     active beat is. Content on the board reads the one it belongs to —
+     which is what lets an outgoing drawing hold its finished state while
+     the next fades in over it.
+
+     Seeded here so everything computes to its start state on the server
+     render: a `calc()` reading an undefined custom property is invalid
+     at computed-value time, which would drop the whole declaration —
+     and for the cards that means losing `translate` and finding all
+     three sitting on the board before hydration. */
+  --p1: 0;
+  --p2: 0;
+  --p3: 0;
   /* Transitioned here, at the source: the camera values inherit down to
      .stage-art, so animating them once on the section drives the
      transform without every descendant running its own transition. */
@@ -96,32 +219,40 @@ body {
 }
 
 @media (min-width: 1024px) {
+  /* The closing shift: the canvas leaves the edge of the screen and
+     settles into a rounded box sitting ON the page. Everything here is
+     one expression of `--e`, so the whole change — the inset, the
+     corners, the edge, the lift off the page — arrives as a single
+     move rather than four things happening near each other.
+
+     `overflow: hidden` on the scene root means the radius clips the
+     backdrop and every drawing with it, so the box's corners are real. */
   .stage-panel {
-    left: calc(48vw - 46vw * var(--e));
-    right: calc(2vw * var(--e));
-    top: calc(3vh * var(--e));
-    bottom: calc(3vh * var(--e));
-    border-top-left-radius: calc(48px - 8px * var(--e));
-    border-bottom-left-radius: calc(48px - 8px * var(--e));
-    border-top-right-radius: calc(40px * var(--e));
-    border-bottom-right-radius: calc(40px * var(--e));
+    left: calc(48vw - 43vw * var(--e));
+    right: calc(5vw * var(--e));
+    top: calc(6vh * var(--e));
+    bottom: calc(6vh * var(--e));
+    border-radius: calc(40px * var(--e));
+    /* Only a lift, fading up from nothing — at rest the panel is flush to
+       the viewport edge and has no business casting a shadow. It needs no
+       hairline: a black box on a white page draws its own edge. */
+    box-shadow:
+      0 calc(var(--e) * 26px) calc(var(--e) * 64px)
+        calc(var(--e) * -12px)
+        color-mix(in srgb, var(--color-ink) calc(var(--e) * 20%), transparent);
     animation: stage-panel-settle 1500ms cubic-bezier(0.65, 0, 0.35, 1) 250ms
       both;
     transform-origin: center;
     will-change: transform;
   }
 
+  /* The canvas is the board and STAYS the board. It does not turn
+     paper, or ink-100, or anything else as the box opens — the closing
+     is read on the same black field the whole narrative was, and the
+     shift is a change of shape only. Everything that sits on it is set
+     in the board palette to match. */
   .stage-backdrop {
     background-color: var(--color-board);
-    background-color: color-mix(
-      in srgb,
-      var(--color-paper) calc(var(--e) * 100%),
-      var(--color-board)
-    );
-  }
-
-  .stage-grid {
-    opacity: calc(1 - var(--e));
   }
 
   .stage-copy {
@@ -145,142 +276,479 @@ body {
   /* Selector doubled on purpose: the base `.stage-art` rule is declared
      later in this file with the same specificity, and would otherwise
      win the transform and cancel the slide. */
-  .stage-art.stage-art-ink {
+  .stage-art.stage-art-close {
     display: none;
-    opacity: clamp(0, calc((var(--e) - 0.28) * 1.5), 0.42);
+    /* A watermark, not a picture: at full strength it puts a pressure
+       vessel straight through the closing paragraph, and body copy does
+       not survive that. Nudged down as it settles too, so the densest
+       part of the drawing sits under the composition rather than across
+       the heading. */
+    opacity: clamp(0, calc((var(--e) - 0.28) * 1.5), 0.22);
+    translate: 0 calc(-50% + var(--e) * 6%);
     transform: translateX(calc(26vw * (1 - var(--e))))
       scale(calc(0.94 + 0.62 * var(--e)));
   }
 
-  .stage[data-opening="true"] .stage-art.stage-art-ink {
+  .stage[data-opening="true"] .stage-art.stage-art-close {
     display: block;
   }
 
-  /* Anchored to the artwork, not the panel, so it overlaps the drawing's
-     lower edge at any viewport shape — glass wants something behind it. */
-  /* Faded with a transition rather than an entrance animation. An
-     animation's fill overrides the opacity declared here, so the old
-     `hero-rise` delay made the empty panel fade itself back in over the
-     hero for 620ms before snapping away again. */
-  .stage-readout {
-    left: 2vw;
-    top: calc(50% + (var(--art-h) / 2) - 5rem);
-    opacity: clamp(0, calc(1 - var(--e) * 2.6), 1);
-    transition: opacity 420ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  /* Hidden wherever the beat carries no readout. Keyed off the section,
-     not the panel: <Glass> routes unrecognised props into the glass
-     config rather than onto the element, so a data-* attribute set on it
-     never reaches the DOM. */
-  .stage[data-readout="false"] .stage-readout {
-    opacity: 0;
-    pointer-events: none;
-  }
-
   /* ── Card panels ───────────────────────────────────────────────────
-     Revealed by scroll position, not a timer: each card crosses its own
-     threshold in `--p` as the reader moves through the chapter, so the
-     three arrive in sequence and hold wherever the reader stops.
+     One cluster, one motion. The three hold fixed positions relative to
+     each other — a cascade from the top right down to the lower left,
+     each overlapping the last — and the whole group slides on and off
+     the board as a rigid object.
 
-     `translate` parks them off the board when their beat isn't active
-     and `transform` carries the reveal — two independent properties, so
-     neither has to know about the other. Parking rather than unmounting
-     keeps the glass panel set constant (a changed set re-initialises the
-     whole scene) and keeps them out of the readout's sampled scene,
-     which ignores opacity. */
+     Everything comes off `--p1`, chapter 01's own scroll progress, and
+     NOTHING here transitions. That is the point: scroll is the only
+     clock, so reversing the scroll reverses the motion exactly. The
+     previous arrangement ran two clocks against each other — a 520ms
+     `translate` transition fired by the beat change, plus a per-card
+     `--p` threshold for the fade — which is why the group arrived
+     broken up and why cards stayed stranded on the board when the
+     reader scrolled back up.
+
+     Parking rather than unmounting keeps the glass panel set constant
+     (a changed set re-initialises the whole scene) and keeps them out
+     of the sampled scene, which ignores opacity. The park distance is
+     52vw — the panel's own resting width — so every card clears the
+     right edge whatever its left offset. */
   .stage-card {
-    --reveal: clamp(0, calc((var(--p) - var(--i) * 0.13 - 0.02) * 5.5), 1);
-    top: calc(6% + var(--i) * 30%);
-    opacity: calc(var(--reveal) * clamp(0, calc(1 - var(--e) * 2.5), 1));
-    transform: translateY(calc(30px * (1 - var(--reveal))));
-    translate: 135% 0;
-    transition: translate 520ms cubic-bezier(0.65, 0, 0.35, 1);
-  }
+    /* In over the first third of the chapter, out again as it hands over
+       to chapter 02, so the cluster is gone exactly when the beat flips
+       and the overlay wipe takes the board. */
+    --in: clamp(0, calc((var(--p1) - 0.03) * 3.2), 1);
+    --out: clamp(0, calc((var(--p1) - 0.8) * 5), 1);
+    /* Smoothstepped, both ends — the same curve `--e` gets in JS. */
+    --reveal: calc(
+      var(--in) * var(--in) * (3 - 2 * var(--in)) *
+        (1 - var(--out) * var(--out) * (3 - 2 * var(--out)))
+    );
+    /* Geometry, anchored to the centre card. `--cw` is that card's
+       width, `--sw` the two satellites', and `--tuck` how far a
+       satellite reaches back across the centre card's edge — so the
+       three stay attached at the corners even on a wide panel, where
+       the rem caps stop the cards scaling with it.
 
-  .stage[data-beat="problem"] .stage-card {
-    translate: 0 0;
-  }
-
-  /* ── Loop stages ───────────────────────────────────────────────────
-     The node layer is laid over the artwork's exact box, so percentage
-     positions from loop-geometry.json land on the drawn ring. */
-  .stage-loop {
-    left: var(--art-left);
-    top: 50%;
-    width: var(--art-w);
-    height: var(--art-h);
-    translate: 0 -50%;
+       `--dy` is the vertical step, a clamped vh: sized so the lap lands
+       on the padding at the foot of the card above and stops there. The
+       cards carry no heading, so the body copy runs to the bottom edge
+       and a deeper lap eats it — a corner attachment, not a card
+       swallowing its neighbour's only sentence. The floor is set by the
+       shortest viewport the pinned layout runs at: the lap can only
+       close so far before the cluster is taller than the panel, and
+       padding buys nothing (it grows the cards as fast as it grows the
+       clearance). */
+    --cw: min(56%, 26rem);
+    --sw: min(48%, 22rem);
+    --tuck: 13rem;
+    --dy: clamp(13.5rem, 24vh, 14.5rem);
     opacity: clamp(0, calc(1 - var(--e) * 2.5), 1);
+    translate: calc(52vw * (1 - var(--reveal))) -50%;
   }
 
-  .stage-node {
+  /* 02 — centred on the canvas, and the anchor the other two hang off. */
+  .stage-card-mid {
+    left: calc(50% - var(--cw) / 2);
+    top: 50%;
+    width: var(--cw);
+  }
+
+  /* 01 — attached at the centre card's top right. */
+  .stage-card-tr {
+    left: calc(50% + var(--cw) / 2 - var(--tuck));
+    top: calc(50% - var(--dy));
+    width: var(--sw);
+  }
+
+  /* 03 — and its mirror at the bottom left. The two insets come out
+     symmetrical on their own: the same tuck measured from opposite
+     edges of a centred box. */
+  .stage-card-bl {
+    left: calc(50% - var(--cw) / 2 + var(--tuck) - var(--sw));
+    top: calc(50% + var(--dy));
+    width: var(--sw);
+  }
+
+  /* ── The benchmark plot ────────────────────────────────────────────
+     Height-bound like the loop diagram, and given the chart's own
+     aspect ratio so the inline SVG fills its box exactly. */
+  /* The hand-over between the two board drawings, both ends of it timed
+     off the SAME clock — chapter 03's progress — so they overlap instead
+     of cutting. The loop is gone by p3 0.16, the plot is in by 0.20, and
+     between 0.04 and 0.16 they cross. Scroll-driven, so scrubbing the
+     boundary dissolves back and forth rather than flickering. */
+  .stage-plot {
+    --t: var(--p3);
+    left: 50%;
+    top: 50%;
     translate: -50% -50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    transition:
-      opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
-      scale 420ms cubic-bezier(0.16, 1, 0.3, 1);
-    opacity: 0.42;
+    width: 94%;
+    opacity: calc(
+      clamp(0, calc((var(--p3) - 0.04) * 6.25), 1) *
+        clamp(0, calc(1 - var(--e) * 2.5), 1)
+    );
   }
 
-  .stage-node[data-active="true"] {
-    opacity: 1;
-    scale: 1.12;
+  /* ── The loop diagram ──────────────────────────────────────────────
+     Six boxes wired into a circuit, revealed as a trail that walks the
+     loop while the chapter's copy stays pinned beside it.
+
+     The container is given the diagram's exact viewBox aspect ratio, so
+     the inline SVG fills it edge to edge and the DOM boxes — placed as
+     percentages of the same coordinate system — land on the ends of the
+     lines. Height-bound and centred, so the whole loop is always in
+     frame whatever shape the panel is.
+
+     `container-type: inline-size` lets the type inside the boxes scale
+     with the drawing instead of drifting out of proportion with it. */
+  .stage-loop,
+  .stage-loop-caption {
+    --t: var(--p2);
+    opacity: calc(
+      clamp(0, calc(1 - var(--p3) * 6.25), 1) *
+        clamp(0, calc(1 - var(--e) * 2.5), 1)
+    );
   }
 
-  .stage-node-ring {
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 999px;
-    background: var(--color-board);
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-paper) 70%, transparent);
-    transition: box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .stage-node[data-active="true"] .stage-node-ring {
-    box-shadow:
-      inset 0 0 0 2px var(--color-paper),
-      0 0 0 6px color-mix(in srgb, var(--color-paper) 12%, transparent);
-  }
-
-  .stage-node-label {
-    font-size: 0.625rem;
-    font-weight: 500;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--color-paper);
-    white-space: nowrap;
-  }
-
-  .stage-hub {
+  .stage-loop {
+    left: 50%;
+    top: 53%;
     translate: -50% -50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1.2;
+    height: 78%;
+    aspect-ratio: 1000 / 1150;
+    container-type: inline-size;
   }
 
-  .stage-caption {
-    translate: -50% 1.75rem;
-    max-width: 22rem;
+  /* Above the drawing, not below it: the description belongs to the step
+     the trail has just reached, and reading it before the eye drops into
+     the loop is the right order. */
+  .stage-loop-caption {
+    left: 50%;
+    top: 4%;
+    width: min(30rem, 74%);
+    translate: -50% 0;
     text-align: center;
     font-size: 0.8125rem;
     line-height: 1.6;
-    color: color-mix(in srgb, var(--color-paper) 70%, transparent);
+    color: color-mix(in srgb, var(--color-paper) 65%, transparent);
   }
+}
 
+/* ── The benchmark plot ──────────────────────────────────────────────
+   Outside the desktop-only block: the stacked layout renders the same
+   chart, so these apply at every width.
+
+   Everything reveals off `--p` with no transitions — scroll is the
+   clock, so it runs backwards for free. `pathLength: 1` on each curve
+   makes its dash offset literally its progress. Type is sized in `cqw`
+   so the labels hold their proportion whether the chart is filling the
+   board or sitting in a stacked card.                                 */
+
+.benchmark-plot {
+  container-type: inline-size;
+}
+
+.benchmark-plot svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.plot-optimum {
+  --draw: clamp(0, calc((var(--t) - var(--from)) / var(--dur)), 1);
+  stroke: color-mix(in srgb, var(--color-paper) 46%, transparent);
+  stroke-width: 2;
+  stroke-dasharray: 0.006 0.008;
+  /* Dashed AND drawn-on would fight each other for the same property,
+     so the reference line reveals by clipping its own width instead. */
+  clip-path: inset(0 calc((1 - var(--draw)) * 100%) 0 0);
+}
+
+.plot-optimum-label,
+.plot-axis-label,
+.plot-tick {
+  fill: color-mix(in srgb, var(--color-paper) 58%, transparent);
+  font-size: 1.95cqw;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+}
+
+.plot-tick {
+  font-size: 2.1cqw;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.plot-axis line {
+  stroke: color-mix(in srgb, var(--color-paper) 30%, transparent);
+  stroke-width: 2;
+}
+
+.plot-curve {
+  --draw: clamp(0, calc((var(--t) - var(--from)) / var(--dur)), 1);
+  stroke: var(--color-paper);
+  stroke-opacity: 0.62;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--draw));
+}
+
+/* The strategy the section is about: the only curve at full strength. */
+[data-lead="true"] .plot-curve {
+  stroke-opacity: 1;
+  stroke-width: 4.2;
+}
+
+.plot-label {
+  opacity: clamp(0, calc((var(--t) - var(--from)) / var(--dur)), 1);
+}
+
+.plot-label-name {
+  fill: color-mix(in srgb, var(--color-paper) 72%, transparent);
+  font-size: 2cqw;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+}
+
+.plot-label-value {
+  fill: color-mix(in srgb, var(--color-paper) 72%, transparent);
+  font-size: 3.4cqw;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The lead's own figure is set larger here too, so the plot and the
+   copy column tell the same story at a glance. */
+[data-lead="true"] .plot-label-value {
+  font-size: 4.4cqw;
+}
+
+[data-lead="true"] .plot-label-name,
+[data-lead="true"] .plot-label-value {
+  fill: var(--color-paper);
+}
+
+/* ── The benchmark figures ───────────────────────────────────────────
+   The same three numbers, enlarged, under the copy. The lead is set
+   larger as well as darker — the size difference IS the claim, and
+   sitting on a shared baseline it reads as one figure towering over the
+   other two rather than three unrelated stats.                        */
+
+.benchmark-figures {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 2.5rem;
+  margin-top: 1.25rem;
+}
+
+.benchmark-figures dt {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-ink-500);
+}
+
+.benchmark-figures dd {
+  margin-top: 0.4rem;
+  font-size: clamp(1.875rem, 3.1vw, 2.5rem);
+  font-weight: 500;
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-500);
+}
+
+.benchmark-figures dd span {
+  font-size: 0.45em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  vertical-align: 0.5em;
+  margin-left: 0.1em;
+}
+
+.benchmark-figures [data-lead="true"] dt {
+  color: var(--color-ink-700);
+}
+
+.benchmark-figures [data-lead="true"] dd {
+  font-size: clamp(3.25rem, 6.4vw, 5.5rem);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* Outside the desktop-only block: the stacked layout renders the same
+   diagram, fully drawn, so these have to apply at every width. */
+
+.loop-diagram {
+  position: relative;
+  aspect-ratio: 1000 / 1150;
+  container-type: inline-size;
+}
+
+.loop-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* The unwalked circuit, so the loop reads as closed from the start. */
+.loop-track {
+  stroke: color-mix(in srgb, var(--color-paper) 14%, transparent);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The trail. `pathLength: 1` on the element means the dash offset is
+   literally the progress, so this is one clamp against `--p` and no
+   JavaScript per frame — and it runs backwards for free. */
+.loop-trail {
+  --draw: clamp(0, calc((var(--t) - var(--from)) / var(--dur)), 1);
+  stroke: var(--color-paper);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--draw));
+}
+
+/* All six stacked in one grid cell, so the block is as tall as its
+   longest line and they cross over in place rather than reflowing. */
+.loop-caption {
+  display: grid;
+}
+
+.loop-caption p {
+  grid-area: 1 / 1;
+  opacity: var(--lit);
+}
+
+.loop-steps {
+  position: absolute;
+  inset: 0;
+}
+
+/* Lit from the frame its line touches it until the next one's lands: a
+   product of two ramps, up at its own arrival and down at the next. No
+   transition anywhere — scroll is the clock, so everything wearing this
+   tracks the trail exactly instead of chasing it.
+
+   Shared by the boxes and the captions ON PURPOSE. One formula means
+   the words cannot cross over at a different moment, or a different
+   rate, from the box they belong to. */
+.loop-lit {
+  --lit: calc(
+    clamp(0, calc((var(--t) - var(--lit-from)) * 26), 1) *
+      (1 - clamp(0, calc((var(--t) - var(--lit-to)) * 26), 1))
+  );
+}
+
+.loop-box {
+  --in: clamp(0, calc((var(--t) - var(--from)) / var(--dur)), 1);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35cqw;
+  padding-inline: 5cqw;
+  border-radius: 2.4cqw;
+  /* Painted, not transparent: the trail runs behind the boxes and this
+     is what hides it inside them. Same trick the loop artwork used. */
+  background: color-mix(
+    in srgb,
+    var(--color-paper) calc(var(--lit) * 8%),
+    var(--color-board)
+  );
+  box-shadow:
+    inset 0 0 0 1.5px
+      color-mix(
+        in srgb,
+        var(--color-paper) calc(26% + var(--lit) * 74%),
+        transparent
+      ),
+    0 0 0 calc(var(--lit) * 1.2cqw)
+      color-mix(
+        in srgb,
+        var(--color-paper) calc(var(--lit) * 8%),
+        transparent
+      );
+  opacity: var(--in);
+  transform: translateY(calc(10px * (1 - var(--in))));
+}
+
+/* The loop closed. The return run landing back on 01 is the point of the
+   whole drawing, so it gets said out loud rather than left for the
+   reader to notice a line arriving. Pure CSS off `--p`, like the rest. */
+.loop-box:first-child::after {
+  content: "";
+  position: absolute;
+  inset: -1.4cqw;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--color-paper) 45%, transparent);
+  opacity: clamp(0, calc((var(--t) - var(--closed-at)) * 14), 1);
+  pointer-events: none;
+}
+
+.loop-box-n {
+  font-size: 2.4cqw;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.16em;
+  color: color-mix(in srgb, var(--color-paper) 45%, transparent);
+}
+
+.loop-box-name {
+  font-size: 3.4cqw;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-paper);
+}
+
+@media (min-width: 1024px) {
+  /* No transform here, deliberately. Anything inside that wants to blur
+     what is behind it — the eyebrow pill, the step card — can only sample
+     back as far as its nearest BACKDROP ROOT, and a transform creates one
+     even when it resolves to zero translation. That put an empty backdrop
+     behind both of them and the blur silently did nothing. The opacity
+     fade is enough of an entrance; it stops creating a root the moment it
+     reaches 1, which is where the frost matters. */
   .stage-closing {
-    opacity: clamp(0, calc((var(--e) - 0.55) * 2.6), 1);
-    transform: translateY(calc(16px * (1 - var(--e))));
+    /* Reaches full at 0.94, so the last stretch of the shift is spent
+       settling rather than still arriving. */
+    opacity: clamp(0, calc((var(--e) - 0.52) * 2.4), 1);
     visibility: hidden;
     pointer-events: none;
   }
 
-  /* Flipped once, by Stage.tsx, when the box is essentially open — keeps
-     the closing links out of the tab order until they're real. */
+  /* A scrim under the closing copy. White type straight onto black with
+     a wireframe drawing running through it reads hard and busy — this
+     lifts the field a little where the words are and falls off to
+     nothing, so the type sits on a graduated ground instead of a wall.
+     Behind the content, and inert. */
+  .stage-closing::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      75% 65% at 26% 52%,
+      color-mix(in srgb, var(--color-paper) 7%, transparent) 0%,
+      color-mix(in srgb, var(--color-paper) 3%, transparent) 45%,
+      transparent 78%
+    );
+  }
+
+  /* Flipped by Stage.tsx as the closing content STARTS fading in — keeps
+     the links out of the tab order while there is nothing to see, without
+     sitting on top of the fade itself. */
   .stage[data-expanded="true"] .stage-closing {
     visibility: visible;
     pointer-events: auto;
@@ -318,6 +786,181 @@ body {
   will-change: transform;
 }
 
+/* ── The hero's annotation loop ──────────────────────────────────────
+   Four notes stepping up the diagonal the drawing climbs, one on screen
+   at a time, cycling forever.
+
+   The cycle is 16s and each note owns a quarter of it, so the delay is
+   just `--i * 4s` — positive, not negative, or note 01 would arrive last
+   on the first pass. `both` fill holds the from-state through the delay,
+   which is what keeps the other three invisible until their turn.
+
+   Frosted in CSS, not liquid glass: the renderer redraws a panel's
+   shader only on a DOM mutation, so an infinitely animating glass panel
+   samples a stale frame unless `markChanged` is pumped every frame
+   forever — and an animation's fill would override the opacity a panel
+   declares, which the glass rules forbid outright.
+
+   The scroll fade sits on the WRAPPER and the loop on the notes, for the
+   same reason: an animated opacity beats a declared one, so a single
+   element would scroll away still lit.                                */
+
+/* The artwork's exact box — see HeroNotes. Anything anchored to the
+   panel instead would drift off its vessel as the window changed shape,
+   since the drawing is sized in `vw` and the panel in `vw` × `vh`. */
+.stage-notes {
+  left: var(--art-left);
+  top: 50%;
+  width: var(--art-w);
+  height: var(--art-h);
+  translate: 0 -50%;
+  opacity: clamp(0, calc(1 - var(--p1) * 5.5), 1);
+  pointer-events: none;
+}
+
+.stage-leaders {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.stage-leader {
+  animation: hero-leader 12s cubic-bezier(0.16, 1, 0.3, 1) infinite both;
+  animation-delay: calc(var(--i) * 4s);
+}
+
+/* `pathLength: 1` makes the dash offset the progress, so the leader
+   draws itself on toward the vessel rather than just appearing. */
+.stage-leader-line {
+  stroke: color-mix(in srgb, var(--color-paper) 78%, transparent);
+  stroke-width: 2.5;
+  stroke-dasharray: 1;
+  animation: hero-leader-draw 12s cubic-bezier(0.16, 1, 0.3, 1) infinite both;
+  animation-delay: calc(var(--i) * 4s);
+}
+
+.stage-leader-dot {
+  fill: var(--color-board);
+  stroke: var(--color-paper);
+  stroke-width: 3;
+}
+
+.stage-note {
+  position: absolute;
+  /* A plain share of the art box, deliberately uncapped: the leaders
+     start at fixed points in that same box, so a card that stopped
+     growing with it would pull away and leave its line hanging. */
+  width: 46%;
+  padding: 1.125rem 1.25rem;
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--color-paper) 6%, transparent);
+  backdrop-filter: blur(22px) saturate(1.15);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-paper) 15%, transparent);
+  animation: hero-note 12s cubic-bezier(0.16, 1, 0.3, 1) infinite both;
+  animation-delay: calc(var(--i) * 4s);
+}
+
+.stage-note-kicker {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-paper) 70%, transparent);
+  white-space: nowrap;
+}
+
+.stage-note-body {
+  margin-top: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--color-paper) 92%, transparent);
+}
+
+/* A third of the cycle each, so the three run back to back. */
+@keyframes hero-leader {
+  0% {
+    opacity: 0;
+  }
+  4%,
+  27% {
+    opacity: 1;
+  }
+  31%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hero-leader-draw {
+  0%,
+  3% {
+    stroke-dashoffset: 1;
+  }
+  14%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* `transform`, not `translate`: the production card uses `translate` to
+   centre itself on its own leader, and two owners of one property means
+   whichever runs last wins. */
+@keyframes hero-note {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  3%,
+  27% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  31%,
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* ── The hero drawing ────────────────────────────────────────────────
+   It leaves on the scroll, not on the beat. The beat change is a single
+   discrete event that fired a 320ms fade wherever the reader happened to
+   be, so the drawing vanished early, or late, or flickered twice if they
+   scrubbed the boundary. Driven off `--p1` it is simply a function of
+   scroll position: the wipe walks left to right — plate end first, the
+   direction every scene reads — and is complete at `--p1: 0.18`, which
+   is the frame the leading card reaches the board. One going, one
+   coming, and it runs backwards for free when the reader scrolls up.
+
+   No transition on purpose: scroll is the clock. The entrance is an
+   animation with `backwards` rather than `both` fill, so once it has
+   run the declared, scroll-driven values take over again — `both` would
+   pin the drawing at its entrance opacity forever. It is also carried
+   on its own class, which Stage.tsx drops once it has played: the
+   drawing unmounts when it scrolls away, and a delayed entrance on a
+   remount would blank it for the length of the delay every time the
+   reader came back up. */
+
+.stage-art-hero {
+  --gone: clamp(0, calc(var(--p1) * 5.5), 1);
+  opacity: calc(1 - var(--gone));
+  clip-path: inset(0 0 0 calc(var(--gone) * 100%));
+}
+
+.stage-art-hero-intro {
+  animation: hero-art-in 1000ms cubic-bezier(0.16, 1, 0.3, 1) 1750ms backwards;
+}
+
+@keyframes hero-art-in {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
 /* Beat changes are a wipe, not a crossfade. The landscape underneath is
    continuous, so the incoming overlay draws itself on left-to-right over
    the one already there — plate end first, production end last, which is
@@ -328,8 +971,8 @@ body {
 .stage-overlay {
   clip-path: inset(0 0 0 0);
   transition:
-    opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
-    clip-path 1000ms cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 650ms cubic-bezier(0.16, 1, 0.3, 1),
+    clip-path 1800ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @starting-style {
@@ -382,6 +1025,61 @@ body {
   }
 }
 
+/* The step card on the board: frosted, so the drawing and the mesh
+   behind it blur through rather than showing sharp under the type. It
+   cannot be a real glass panel — that has to be a DIRECT child of the
+   scene root and this is three wrappers deep in the closing grid — so
+   this is the CSS stand-in for one. */
+
+.stage-closing-card {
+  backdrop-filter: blur(22px) saturate(1.15);
+}
+
+/* ── The closing box, stacked ────────────────────────────────────────
+   Below `lg` nothing pins and nothing opens, so the closing panel is
+   handed the boxed canvas as a static container — the same surface,
+   radius, hairline and lift the pinned panel shifts into above `lg`, so
+   "Start here" is presented the same way at either width.
+
+   The watermark is capped at the same 0.18 for the same reason: grey
+   body copy does not survive a drawing at full strength behind it. */
+
+.stage-closing-box {
+  border-radius: 32px;
+  background: var(--color-board);
+  box-shadow: 0 18px 44px -14px color-mix(in srgb, var(--color-ink) 22%, transparent);
+}
+
+.stage-closing-mark {
+  opacity: 0.22;
+}
+
+/* ── FAQ ─────────────────────────────────────────────────────────
+   `touch-action: manipulation` is the one that matters on a phone. A
+   <button> defaults to `auto`, which leaves double-tap-to-zoom
+   detection in place, and the browser then holds every tap for ~300ms
+   to see whether a second one is coming — which reads as the row
+   ignoring you. It also kills the grey flash on iOS.
+
+   `cursor` is the desktop half of the same point: a <button> is
+   `default` unless told otherwise, so a whole row that toggles gave no
+   sign it could be clicked.                                          */
+
+.faq-row {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.faq-q {
+  transition: opacity 160ms ease-out;
+}
+
+.faq-row:hover .faq-q,
+.faq-row:hover .faq-plus {
+  opacity: 0.6;
+}
+
 /* ── FAQ ─────────────────────────────────────────────────────────── */
 
 .faq-plus::before,
@@ -402,14 +1100,12 @@ body {
   transform: rotate(180deg);
 }
 
+/* Height comes from Faq.tsx, measured. `overflow: hidden` here rather
+   than on an inner wrapper — the wrapper needs to lay out at its natural
+   height for the measurement to mean anything. */
 .faq-panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 320ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.faq-panel[data-open="true"] {
-  grid-template-rows: 1fr;
+  overflow: hidden;
+  transition: height 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -418,6 +1114,21 @@ body {
   .hero-rise,
   .stage-readout {
     animation: none;
+  }
+
+  /* The loop stops and the first note simply stands, leader and all. */
+  .stage-note,
+  .stage-leader,
+  .stage-leader-line {
+    animation: none;
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+
+  .stage-note:first-of-type,
+  .stage-leader:first-of-type,
+  .stage-leader:first-of-type .stage-leader-line {
+    opacity: 1;
   }
 
   .stage-art,
@@ -429,9 +1140,8 @@ body {
     transition: none;
   }
 
-  .stage-card {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
+  /* The cards are deliberately left alone: their movement is scroll
+     position expressed as position, not an animation running on its own
+     clock, and the same `translate` is what holds them off the board
+     for every other beat. */
 }

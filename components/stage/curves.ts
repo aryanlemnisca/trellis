@@ -1,3 +1,18 @@
+/**
+ * Straight segments through densely sampled points.
+ *
+ * For an analytic curve this beats any smoothing: at ~120 samples the
+ * segments are a few pixels each and read as perfectly smooth, whereas
+ * `smoothPath`'s horizontal tangents put a visible ripple at every
+ * sample when the points are close together.
+ */
+export function linePath(points: Array<[number, number]>): string {
+  if (points.length < 2) return "";
+  return points
+    .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`)
+    .join(" ");
+}
+
 /** Smooth path through points, with a light horizontal-tangent easing. */
 export function smoothPath(points: Array<[number, number]>): string {
   if (points.length < 2) return "";

@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { BenchmarkMini } from "./BenchmarkMini";
+import type { CSSProperties, ReactNode } from "react";
+import { BENCHMARK, BENCHMARK_LEAD } from "@/lib/stage/benchmark";
 
 /**
  * The stage's script: one entry per scroll beat, index 0 being the hero.
@@ -25,17 +25,12 @@ export type Beat = {
    * mounting is what gates it, so a beat with no overlay is a bare field.
    */
   overlay: string | null;
-  /** Null where the beat carries no glass readout. */
-  readout: ReactNode | null;
+  /** Plots the benchmark chart on the board. */
+  chart?: boolean;
   /** Card stack, for beats that break the argument into pieces instead. */
   cards?: Card[];
   /** Stages walked one at a time while the beat's copy is pinned. */
   stages?: Stage[];
-  /**
-   * A standalone drawing, shown without the landscape under it. Distinct
-   * from `overlay`, which mounts the surface as well.
-   */
-  art?: string;
 };
 
 export type Stage = {
@@ -54,9 +49,7 @@ export const LOOP_STAGES: Stage[] = [
 ];
 
 export type Card = {
-  n: string;
   kicker: string;
-  heading: string;
   body: string;
   figure: ReactNode;
 };
@@ -65,7 +58,7 @@ export type Card = {
    grid, so the cards read as three readings of the same space. */
 
 const FigGrid = () => (
-  <g stroke="currentColor" strokeOpacity={0.16} strokeWidth={1}>
+  <g stroke="currentColor" strokeOpacity={0.3} strokeWidth={1}>
     {[0, 1, 2, 3, 4, 5, 6].map((i) => (
       <line key={`v${i}`} x1={6 + i * 20} y1={6} x2={6 + i * 20} y2={78} />
     ))}
@@ -89,7 +82,7 @@ const FigInteracting = () => {
   return (
     <svg viewBox="0 0 132 84" className="h-[84px] w-[132px] text-paper" aria-hidden>
       <FigGrid />
-      <g stroke="currentColor" strokeOpacity={0.5} strokeWidth={1.2}>
+      <g stroke="currentColor" strokeOpacity={0.75} strokeWidth={1.3}>
         <line x1={30} y1={58} x2={66} y2={26} />
         <line x1={66} y1={26} x2={96} y2={62} />
         <line x1={66} y1={26} x2={116} y2={40} />
@@ -128,15 +121,15 @@ const FigFragmented = () => (
           rx={4}
           fill="none"
           stroke="currentColor"
-          strokeOpacity={0.34}
-          strokeWidth={1}
+          strokeOpacity={0.55}
+          strokeWidth={1.1}
         />
         <text
           x={(x as number) + 29}
           y={(y as number) + 20}
           textAnchor="middle"
           fill="currentColor"
-          fillOpacity={0.62}
+          fillOpacity={0.85}
           fontSize={8}
           letterSpacing="0.12em"
         >
@@ -149,99 +142,164 @@ const FigFragmented = () => (
 
 export const PROBLEM_CARDS: Card[] = [
   {
-    n: "01",
     kicker: "Limited experiments",
-    heading: "Physical experimentation is scarce.",
     body: "The design space is far larger than the laboratory can physically sample.",
     figure: <FigScarce />,
   },
   {
-    n: "02",
     kicker: "Interacting variables",
-    heading: "Parameters affect one another.",
     body: "Understanding one variable in isolation rarely explains the process.",
     figure: <FigInteracting />,
   },
   {
-    n: "03",
     kicker: "Fragmented learning",
-    heading: "Context breaks between tools.",
     body: "Design, evidence, assumptions, models and decisions end up in different systems — or different people.",
     figure: <FigFragmented />,
   },
 ];
 
-const Readout = ({
-  label,
-  stat,
-  line,
-  children,
-}: {
-  label: string;
-  stat?: string;
-  line: string;
-  children?: ReactNode;
-}) => (
-  <div className="flex flex-col gap-3">
-    <span className="text-[0.625rem] font-medium uppercase tracking-[0.28em] text-paper/60">
-      {label}
-    </span>
-    {stat ? (
-      <span className="text-[1.5rem] font-semibold leading-none tracking-[-0.02em] text-paper">
-        {stat}
-      </span>
-    ) : null}
-    {children}
-    <span className="text-[0.8125rem] leading-snug text-paper/70">{line}</span>
-  </div>
-);
-
 export const BEATS: Beat[] = [
   {
+    // The hero drawing is mounted by Stage.tsx directly, not through the
+    // beat's overlay slot: it leaves on scroll rather than on the beat.
     id: "hero",
     overlay: null,
-    art: "/illustration/path-light.png",
-    readout: null,
   },
   {
     id: "problem",
     overlay: null,
-    readout: null,
     cards: PROBLEM_CARDS,
   },
   {
+    // No artwork at all: the board is bare for this beat and the loop
+    // diagram (DOM + inline SVG, so it can reveal against scroll) is
+    // what draws on it. `overlay: null` is also what keeps the shared
+    // response surface from mounting underneath.
     id: "loop",
-    overlay: "/illustration/overlay-loop.svg",
-    readout: null,
+    overlay: null,
     stages: LOOP_STAGES,
   },
   {
+    // Nothing but the plot. `overlay: null` is what keeps both the
+    // evidence overlay and the shared response surface from mounting.
     id: "evidence",
-    overlay: "/illustration/overlay-evidence.svg",
-    readout: (
-      <Readout
-        label="03 · The evidence"
-        line="Trellis 99% · DoE 77% · OFAT 50% of the known optimum titre."
-      >
-        <div className="py-1">
-          <BenchmarkMini />
-        </div>
-      </Readout>
-    ),
+    overlay: null,
+    chart: true,
+  },
+];
+
+/**
+ * The benchmark as three enlarged figures.
+ *
+ * Ascending, so read left to right the row IS the climb, and the lead
+ * strategy carries the weight — same size as the others so the numbers
+ * stay comparable, but full ink against their grey. Sizing the winner
+ * larger would flatter the comparison rather than making it.
+ */
+const BenchmarkFigures = () => (
+  <dl className="benchmark-figures">
+    {BENCHMARK.map((series, i) => (
+      <div key={series.name} data-lead={i === BENCHMARK_LEAD}>
+        <dt>{series.name}</dt>
+        <dd>
+          {series.value}
+          <span>%</span>
+        </dd>
+      </div>
+    ))}
+  </dl>
+);
+
+/**
+ * The hero's annotation loop — the three stages the drawing runs
+ * through, one on screen at a time.
+ *
+ * Every coordinate here is a fraction of the ARTWORK's own box, not the
+ * panel's: the drawing is sized in `vw` and the panel in `vw` × `vh`, so
+ * its vertical position inside the panel moves with the viewport shape.
+ * Anchored to the art box instead, a leader line lands on its vessel at
+ * any window size. `.stage-notes` is given that exact box, and the
+ * leaders' <svg> shares the drawing's 1663×870 viewBox.
+ *
+ * `to` was measured off the drawing rather than guessed — the alpha
+ * centroid of each vessel in `path-light.png`.
+ *
+ * The cards are held well clear of their anchors so each leader has room
+ * to be a line rather than a tick, and each `from` sits exactly on the
+ * card edge it leaves. That is also why `.stage-note` is sized as a
+ * plain per-cent of the art box and not capped in rem: a card whose
+ * width stopped tracking the box would pull away from its own line.
+ */
+export type HeroNote = {
+  kicker: string;
+  body: string;
+  /**
+   * Card placement inside the art box, written so the edge the leader
+   * leaves from is the edge that is PINNED. The card's height is set by
+   * its text, in px, so its top and bottom cannot both be known in art
+   * box per-cent — pin the one the line touches and the join is exact at
+   * every viewport, whatever the copy wraps to.
+   */
+  place: CSSProperties;
+  /** Where the leader leaves the card, and the vessel it lands on. */
+  from: [number, number];
+  to: [number, number];
+};
+
+export const HERO_NOTES: HeroNote[] = [
+  {
+    kicker: "Plate",
+    body: "High-throughput screening — many conditions sampled at once.",
+    // Leaves the bottom edge, so the bottom edge is what is pinned.
+    place: { left: "0%", bottom: "56%" },
+    from: [0.111, 0.44],
+    to: [0.111, 0.88],
+  },
+  {
+    kicker: "Bench → Pilot",
+    body: "Trellis narrows toward the conditions worth carrying forward.",
+    // The only one that reaches UP: it sits below its vessel and the
+    // leader runs back to it, so the card's TOP edge is what is pinned.
+    // It hangs below the art box, on the bare board — which is fine,
+    // the panel is the canvas — but not unboundedly: the art box is
+    // width-bound while the panel tracks viewport HEIGHT, so a short
+    // window closes in on it. The binding case is wide-and-short (the art
+    // box is nearly as tall as the panel there); 106% with a two-line
+    // card still clears 1920×760, and lower starts clipping.
+    // Wider than the others on purpose: at 56% the sentence wraps to two
+    // lines instead of three, which is ~25px less card. That is what buys
+    // the extra drop below — see the clipping note.
+    place: { left: "14%", top: "106%", width: "56%" },
+    from: [0.395, 1.06],
+    to: [0.395, 0.691],
+  },
+  {
+    kicker: "Production",
+    body: "The process arrives de-risked, its true potential established.",
+    // Reaches ACROSS rather than down: this vessel's anchor sits high in
+    // the drawing, so there is no room for a card above it. The right
+    // edge is pinned by `left` + the card's fixed 46% width, and
+    // `translate` centres the card on the point the line leaves from —
+    // `translate` rather than `transform`, which the loop keyframes own.
+    // Sitting above the vessel, the leader runs slightly downhill into
+    // it rather than dead level.
+    place: { left: "19%", top: "26%", translate: "0 -50%" },
+    from: [0.65, 0.26],
+    to: [0.895, 0.337],
   },
 ];
 
 export type Chapter = {
-  step: string;
   kicker: string;
   heading: ReactNode;
   body: string[];
+  /** Extra content under the copy — the benchmark figures, so far. */
+  aside?: ReactNode;
 };
 
 /** Chapters map onto beats 1–4; the hero occupies beat 0. */
 export const CHAPTERS: Chapter[] = [
   {
-    step: "01",
     kicker: "The problem",
     heading: (
       <>
@@ -255,7 +313,6 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
-    step: "02",
     kicker: "How it works",
     heading: (
       <>
@@ -269,7 +326,6 @@ export const CHAPTERS: Chapter[] = [
     ],
   },
   {
-    step: "03",
     kicker: "The evidence",
     heading: (
       <>
@@ -282,6 +338,7 @@ export const CHAPTERS: Chapter[] = [
       "OFAT, DoE and Trellis were benchmarked on the same virtual 12-factor CHO fed-batch process. Trellis reached effectively the full known optimum; DoE plateaued near 77%, OFAT near 50%.",
       "The difference is where the experiments go. OFAT searches locally, DoE spreads broadly and wastes runs far from the optimum, Trellis explores uncertain regions and concentrates where better performance is most likely.",
     ],
+    aside: <BenchmarkFigures />,
   },
 ];
 

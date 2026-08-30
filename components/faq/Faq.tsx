@@ -1,12 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Faq — accordion.
+ *
  * Managed rather than <details> so the open/close height can transition
  * in both directions (a closed <details> doesn't render its content, so
  * there is nothing to animate).
+ *
+ * The height is MEASURED, not expressed as `grid-template-rows: 0fr →
+ * 1fr`. That trick works in Chrome and silently fails in Safari: the
+ * answer's wrapper needs `overflow: hidden` to clip while closed, an
+ * overflow-hidden grid item has an automatic minimum size of 0, and with
+ * an indefinite container height Safari then resolves `1fr` to 0 — so
+ * the row toggled, the panel stayed shut, and it looked like the tap had
+ * been ignored. Chrome special-cases it, which is exactly why it was
+ * invisible on desktop.
  */
 
 const ITEMS = [
@@ -38,6 +48,21 @@ const ITEMS = [
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
+  const answerRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [heights, setHeights] = useState<number[]>([]);
+
+  // Re-measured rather than measured once: an answer's height changes
+  // when the webfont lands and every time the column reflows, and a
+  // stale number would clip the last line or leave a gap under it.
+  useEffect(() => {
+    const measure = () =>
+      setHeights(answerRefs.current.map((node) => node?.scrollHeight ?? 0));
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    for (const node of answerRefs.current) if (node) observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section id="faq" className="relative px-6 pb-28 pt-24 sm:px-10 lg:px-14 xl:px-20">
@@ -57,9 +82,9 @@ export function Faq() {
                     aria-expanded={isOpen}
                     aria-controls={`faq-panel-${i}`}
                     onClick={() => setOpen(isOpen ? null : i)}
-                    className="flex w-full items-center justify-between gap-8 py-6 text-left"
+                    className="faq-row flex w-full items-center justify-between gap-8 py-6 text-left"
                   >
-                    <span className="text-[clamp(1rem,1.5vw,1.1875rem)] font-medium text-ink">
+                    <span className="faq-q text-[clamp(1rem,1.5vw,1.1875rem)] font-medium text-ink">
                       {item.q}
                     </span>
                     <span
@@ -72,10 +97,14 @@ export function Faq() {
                 <div
                   id={`faq-panel-${i}`}
                   role="region"
-                  data-open={isOpen}
                   className="faq-panel"
+                  style={{ height: isOpen ? `${heights[i] ?? 0}px` : 0 }}
                 >
-                  <div className="overflow-hidden">
+                  <div
+                    ref={(node) => {
+                      answerRefs.current[i] = node;
+                    }}
+                  >
                     <p className="max-w-[68ch] pb-7 text-[0.9375rem] leading-relaxed text-ink-500">
                       {item.a}
                     </p>
