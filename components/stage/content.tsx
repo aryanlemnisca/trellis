@@ -77,28 +77,71 @@ const FigScarce = () => (
   </svg>
 );
 
+/* Labelled inputs converging through the model into a few outputs — the
+   brochure's node diagram, redrawn small enough for a card. Cross-links
+   (not two clean fans) are the point: nothing here maps one-to-one. */
 const FigInteracting = () => {
-  const nodes = [[30, 58], [66, 26], [96, 62], [116, 40]];
+  const inputs = [
+    { label: "pH", y: 10 },
+    { label: "Temp", y: 28 },
+    { label: "Feed", y: 56 },
+    { label: "Media", y: 74 },
+  ];
+  const outputs = [
+    { label: "Titre", y: 16 },
+    { label: "CQAs", y: 42 },
+    { label: "Viability", y: 68 },
+  ];
+  const hubs: [number, number][] = [
+    [54, 28],
+    [54, 56],
+  ];
+
   return (
     <svg viewBox="0 0 132 84" className="h-[84px] w-[132px] text-paper" aria-hidden>
-      <FigGrid />
-      <g stroke="currentColor" strokeOpacity={0.75} strokeWidth={1.3}>
-        <line x1={30} y1={58} x2={66} y2={26} />
-        <line x1={66} y1={26} x2={96} y2={62} />
-        <line x1={66} y1={26} x2={116} y2={40} />
-        <line x1={30} y1={58} x2={96} y2={62} />
+      <g stroke="currentColor" strokeOpacity={0.55} strokeWidth={1}>
+        {inputs.map((inp) => {
+          const hub = hubs[inp.y < 42 ? 0 : 1];
+          return <line key={inp.label} x1={22} y1={inp.y} x2={hub[0]} y2={hub[1]} />;
+        })}
+        {/* Cross-links, so a change on one side doesn't read as isolated. */}
+        <line x1={22} y1={inputs[1].y} x2={hubs[1][0]} y2={hubs[1][1]} />
+        <line x1={22} y1={inputs[2].y} x2={hubs[0][0]} y2={hubs[0][1]} />
+        <line x1={hubs[0][0]} y1={hubs[0][1]} x2={hubs[1][0]} y2={hubs[1][1]} />
+        {outputs.map((out) => {
+          const hub = hubs[out.y < 42 ? 0 : 1];
+          return <line key={out.label} x1={hub[0]} y1={hub[1]} x2={102} y2={out.y} />;
+        })}
       </g>
-      {nodes.map(([x, y]) => (
+      {hubs.map(([x, y]) => (
         <circle
           key={`${x}-${y}`}
           cx={x}
           cy={y}
-          r={5.5}
+          r={4.5}
           fill="none"
           stroke="currentColor"
           strokeOpacity={0.9}
-          strokeWidth={1.8}
+          strokeWidth={1.6}
         />
+      ))}
+      {inputs.map((inp) => (
+        <text key={inp.label} x={0} y={inp.y + 2.5} fontSize={7} fill="currentColor" fillOpacity={0.75}>
+          {inp.label}
+        </text>
+      ))}
+      {outputs.map((out) => (
+        <text
+          key={out.label}
+          x={132}
+          y={out.y + 2.5}
+          textAnchor="end"
+          fontSize={7}
+          fill="currentColor"
+          fillOpacity={0.85}
+        >
+          {out.label}
+        </text>
       ))}
     </svg>
   );
@@ -153,7 +196,7 @@ export const PROBLEM_CARDS: Card[] = [
   },
   {
     kicker: "Fragmented learning",
-    body: "Design, evidence, assumptions, models and decisions end up in different systems — or different people.",
+    body: "Design, evidence, assumptions, models and decisions end up in different systems, or with different people.",
     figure: <FigFragmented />,
   },
 ];
@@ -249,7 +292,7 @@ export type HeroNote = {
 export const HERO_NOTES: HeroNote[] = [
   {
     kicker: "Plate",
-    body: "High-throughput screening — many conditions sampled at once.",
+    body: "High-throughput screening, many conditions sampled at once.",
     // Leaves the bottom edge, so the bottom edge is what is pinned.
     place: { left: "0%", bottom: "56%" },
     from: [0.111, 0.44],
@@ -306,7 +349,7 @@ export const CHAPTERS: Chapter[] = [
     heading: (
       <>
         You are optimising a process you can only{" "}
-        <em className="not-italic text-ink-500">partially observe</em>.
+        <em className="italic text-accent">partially observe</em>.
       </>
     ),
     body: [
@@ -320,11 +363,11 @@ export const CHAPTERS: Chapter[] = [
     heading: (
       <>
         A learning loop the{" "}
-        <em className="not-italic text-ink-500">scientist</em> drives.
+        <em className="italic text-accent">scientist</em> drives.
       </>
     ),
     body: [
-      "Trellis connects experiment design, data, modelling and next-experiment selection into one continuous workflow — then recommends the run most likely to produce evidence that matters for the next decision.",
+      "Trellis connects experiment design, data, modelling and next-experiment selection into one continuous workflow, then recommends the run most likely to produce evidence that matters for the next decision.",
       "You define the objective, factors and constraints, review what the model has learned, and decide whether it needs refining before the next experiment runs.",
     ],
   },
@@ -333,7 +376,7 @@ export const CHAPTERS: Chapter[] = [
     heading: (
       <>
         Same process, same objective,{" "}
-        <em className="not-italic text-ink-500">different</em> learning
+        <em className="italic text-accent">different</em> learning
         efficiency.
       </>
     ),

@@ -14,13 +14,29 @@ Next.js 16 (App Router, Turbopack) + Tailwind v4 + `@ybouane/liquidglass`.
 
 ## Non-negotiables
 
-- **Type:** Inter only, self-hosted from `app/fonts.css` (`/public/fonts/*.woff2`).
-  Do **not** reintroduce `next/font` — see the comment at the top of `app/fonts.css`
-  for why the liquid-glass font prefetch breaks with it.
-- **Palette:** black and white, plus one surface colour — `board`, the dark
-  field the stage panel draws on. Tokens in `app/globals.css`: `ink`, `paper`,
-  the `ink-900/700/500/300/100` ramp, and `board`. No other hues, no accent
-  colour. Type on the board is `paper` at an opacity step.
+- **Type:** Inter for body copy and UI, self-hosted from `app/fonts.css`
+  (`/public/fonts/*.woff2`). Do **not** reintroduce `next/font` for Inter — see
+  the comment at the top of `app/fonts.css` for why the liquid-glass font
+  prefetch breaks with it. **PT Serif** is the second, permanent typeface —
+  headlines, chapter/hero headings, eyebrow labels, card kickers, box/step
+  names, and the wordmark, generally set bold, with italic for emphasis spans
+  and named labels (`<em>` fragments, `.loop-box-name`, `.stage-note-kicker`,
+  `by Lemnisca`). It's linked via Google Fonts in `app/layout.tsx`, not a local
+  `@font-face` — liquidglass prefetches every `@font-face` in the document, so
+  a linked stylesheet keeps it out of that scan entirely (safe either way,
+  since Google's CSS uses absolute URLs, unlike `next/font`'s broken relative
+  ones — see the `app/layout.tsx` comment). Body paragraphs stay Inter.
+- **Palette:** black, white, `board` (the dark field the stage panel draws
+  on), plus **one accent colour** — `--color-accent` / `-700` / `-100`, a navy
+  borrowed from the Trellis poster/brochure, at the user's explicit request to
+  depart from the original black/white/board-only rule. Tokens in
+  `app/globals.css`: `ink`, `paper`, the `ink-900/700/500/300/100` ramp,
+  `board`, and the `accent` set. The accent carries emphasis (headline `<em>`
+  spans, primary buttons, links, the lead series in a comparison) and washes
+  backgrounds/dividers on white sections (eyebrow pill, FAQ hairlines) and on
+  the board (eyebrow-board, loop box fill/ring, the closing step card). Body
+  text and non-lead data stay ink/paper — the accent marks "the thing to
+  remember," not everything.
   `BOARD` in `scripts/build-scenes.py` must match `--color-board` by hand — the
   loop overlay knocks the mesh out behind its nodes by painting that colour,
   and the SVGs are build output.

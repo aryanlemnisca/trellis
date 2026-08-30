@@ -94,8 +94,14 @@ export function BenchmarkPlot({ className }: { className?: string }) {
           );
           const from = CURVE_FROM + i * CURVE_STAGGER;
           const timing = { "--from": from, "--dur": CURVE_DUR } as React.CSSProperties;
+          const isLead = i === BENCHMARK_LEAD;
+          // The lead's value is set larger (see [data-lead] in globals.css),
+          // so it needs more clearance below the name or the two collide —
+          // a fixed gap tuned for the smaller non-lead size isn't enough.
+          const nameY = sy(series.value) - (isLead ? 8 : 4);
+          const valueY = sy(series.value) + (isLead ? 36 : 26);
           return (
-            <g key={series.name} data-lead={i === BENCHMARK_LEAD}>
+            <g key={series.name} data-lead={isLead}>
               <path
                 className="plot-curve"
                 d={linePath(points)}
@@ -109,10 +115,10 @@ export function BenchmarkPlot({ className }: { className?: string }) {
                   { "--from": from + CURVE_DUR - 0.06, "--dur": 0.08 } as React.CSSProperties
                 }
               >
-                <text className="plot-label-name" x={x1 + 26} y={sy(series.value) - 4}>
+                <text className="plot-label-name" x={x1 + 26} y={nameY}>
                   {series.name.toUpperCase()}
                 </text>
-                <text className="plot-label-value" x={x1 + 26} y={sy(series.value) + 26}>
+                <text className="plot-label-value" x={x1 + 26} y={valueY}>
                   {series.value}%
                 </text>
               </g>

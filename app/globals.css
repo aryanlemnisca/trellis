@@ -3,11 +3,22 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* PT Serif, linked in app/layout.tsx rather than self-hosted: the
+     accent/serif system below is a deliberate departure from the
+     Inter-only rule, at the user's request. Linked (not a local
+     @font-face) because liquidglass prefetches every @font-face in the
+     document — this one never sits inside a glass panel, but a linked
+     stylesheet keeps it out of that scan entirely. */
+  --font-serif: "PT Serif", Georgia, serif;
 
   /* Monochrome, plus one surface colour: `board`, the dark field the
      stage panel draws on. Kept separate from `ink` so surface and type
      move independently — and matched by hand to `BOARD` in
-     scripts/build-scenes.py, which paints it into the loop overlay. */
+     scripts/build-scenes.py, which paints it into the loop overlay.
+     A dark navy now, not pure black, to match the poster's field —
+     kept close enough in luminance to black that every wash/opacity
+     step already tuned against it (loop track, plot axes, card ring)
+     still reads at the same contrast. */
   --color-ink: #000000;
   --color-paper: #ffffff;
   --color-ink-900: #0a0a0a;
@@ -15,7 +26,14 @@
   --color-ink-500: #737373;
   --color-ink-300: #d4d4d4;
   --color-ink-100: #f5f5f5;
-  --color-board: #000000;
+  --color-board: #0a1a26;
+
+  /* The one accent colour, borrowed from the Trellis poster/brochure.
+     A deliberate, permanent exception to "black, white, board only" —
+     see the design-language note at the top of AGENTS.md. */
+  --color-accent: #1f4a63;
+  --color-accent-700: #163a4d;
+  --color-accent-100: #eaf1f5;
 }
 
 /* Registered so they interpolate — an unregistered custom property is
@@ -94,7 +112,34 @@ body {
   );
 }
 
+/* The primary button's backdrop: same falloff as the neutral slab, but
+   navy — the shader's own optics (GLASS_SPEC) never change, only what
+   it has to bend. That is the sanctioned way to tint a glass button. */
+.glass-button-slab-accent {
+  background: radial-gradient(
+    132% 190% at 22% 4%,
+    color-mix(in srgb, var(--color-accent-100) 55%, var(--color-accent) 45%) 0%,
+    var(--color-accent) 30%,
+    var(--color-accent-700) 65%,
+    color-mix(in srgb, var(--color-accent-700) 55%, black 45%) 100%
+  );
+}
+
+/* The secondary button's backdrop: a light falloff so `frosted` reads
+   as a pale glass pill instead of the dark slab's near-black one. */
+.glass-button-slab-light {
+  background: radial-gradient(
+    132% 190% at 22% 4%,
+    var(--color-paper) 0%,
+    var(--color-ink-100) 40%,
+    var(--color-accent-100) 75%,
+    color-mix(in srgb, var(--color-accent-100) 70%, var(--color-ink-300) 30%) 100%
+  );
+}
+
 .glass-button-label {
+  font-family: var(--font-serif);
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -149,28 +194,30 @@ body {
   width: fit-content;
   border-radius: 999px;
   padding: 0.5rem 0.9375rem 0.5rem 1.125rem;
-  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
   backdrop-filter: blur(14px) saturate(1.35);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 9%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--color-paper) 85%, transparent),
     0 1px 2px color-mix(in srgb, var(--color-ink) 5%, transparent);
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.24em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-ink-700);
+  color: var(--color-accent);
 }
 
-/* On the board the same pill has to invert: a wash of paper, a paper
-   hairline, paper type. Same shape, opposite ground. */
+/* On the board the same pill has to invert: a wash of the accent, an
+   accent hairline, accent-tinted type bright enough to read on black. */
 .eyebrow-board {
-  background: color-mix(in srgb, var(--color-paper) 8%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
   backdrop-filter: blur(16px) saturate(1.1);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-paper) 18%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-accent-100) 35%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--color-paper) 22%, transparent);
-  color: color-mix(in srgb, var(--color-paper) 80%, transparent);
+  color: color-mix(in srgb, var(--color-accent-100) 88%, var(--color-paper) 12%);
 }
 
 /* ── Stage ───────────────────────────────────────────────────────────
@@ -429,10 +476,11 @@ body {
     width: min(34rem, 80%);
     translate: -50% 0;
     text-align: center;
+    font-family: var(--font-serif);
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.5;
-    color: var(--color-paper);
+    color: color-mix(in srgb, var(--color-accent-100) 85%, var(--color-paper) 15%);
   }
 }
 
@@ -496,8 +544,11 @@ body {
   stroke-dashoffset: calc(1 - var(--draw));
 }
 
-/* The strategy the section is about: the only curve at full strength. */
+/* The strategy the section is about: the only curve at full strength,
+   and the only one carrying the accent — everything else stays neutral
+   so the one result the section is making the case for is unmistakable. */
 [data-lead="true"] .plot-curve {
+  stroke: color-mix(in srgb, var(--color-accent-100) 85%, var(--color-paper) 15%);
   stroke-opacity: 1;
   stroke-width: 4.2;
 }
@@ -529,7 +580,7 @@ body {
 
 [data-lead="true"] .plot-label-name,
 [data-lead="true"] .plot-label-value {
-  fill: var(--color-paper);
+  fill: color-mix(in srgb, var(--color-accent-100) 85%, var(--color-paper) 15%);
 }
 
 /* ── The benchmark figures ───────────────────────────────────────────
@@ -573,13 +624,14 @@ body {
 }
 
 .benchmark-figures [data-lead="true"] dt {
-  color: var(--color-ink-700);
+  color: var(--color-accent);
 }
 
 .benchmark-figures [data-lead="true"] dd {
+  font-family: var(--font-serif);
   font-size: clamp(3.25rem, 6.4vw, 5.5rem);
-  font-weight: 600;
-  color: var(--color-ink);
+  font-weight: 700;
+  color: var(--color-accent);
 }
 
 /* Outside the desktop-only block: the stacked layout renders the same
@@ -601,7 +653,7 @@ body {
 
 /* The unwalked circuit, so the loop reads as closed from the start. */
 .loop-track {
-  stroke: color-mix(in srgb, var(--color-paper) 14%, transparent);
+  stroke: color-mix(in srgb, var(--color-accent-100) 30%, transparent);
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -612,7 +664,7 @@ body {
    JavaScript per frame — and it runs backwards for free. */
 .loop-trail {
   --draw: clamp(0, calc((var(--t) - var(--from)) / var(--dur)), 1);
-  stroke: var(--color-paper);
+  stroke: color-mix(in srgb, var(--color-accent-100) 70%, var(--color-paper) 30%);
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -655,29 +707,29 @@ body {
   --in: clamp(0, calc((var(--t) - var(--from)) / var(--dur)), 1);
   position: absolute;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.35cqw;
-  padding-inline: 5cqw;
+  flex-direction: row;
+  align-items: center;
+  gap: 2.2cqw;
+  padding-inline: 3.6cqw;
   border-radius: 2.4cqw;
   /* Painted, not transparent: the trail runs behind the boxes and this
      is what hides it inside them. Same trick the loop artwork used. */
   background: color-mix(
     in srgb,
-    var(--color-paper) calc(var(--lit) * 8%),
+    var(--color-accent) calc(var(--lit) * 20%),
     var(--color-board)
   );
   box-shadow:
     inset 0 0 0 1.5px
       color-mix(
         in srgb,
-        var(--color-paper) calc(26% + var(--lit) * 74%),
+        var(--color-accent-100) calc(20% + var(--lit) * 65%),
         transparent
       ),
     0 0 0 calc(var(--lit) * 1.2cqw)
       color-mix(
         in srgb,
-        var(--color-paper) calc(var(--lit) * 8%),
+        var(--color-accent-100) calc(var(--lit) * 14%),
         transparent
       );
   opacity: var(--in);
@@ -692,9 +744,28 @@ body {
   position: absolute;
   inset: -1.4cqw;
   border-radius: inherit;
-  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--color-paper) 45%, transparent);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--color-accent-100) 60%, transparent);
   opacity: clamp(0, calc((var(--t) - var(--closed-at)) * 14), 1);
   pointer-events: none;
+}
+
+.loop-box-icon {
+  flex: none;
+  width: 5cqw;
+  height: 5cqw;
+  color: color-mix(in srgb, var(--color-accent-100) 75%, var(--color-paper) 25%);
+}
+
+.loop-box-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.loop-box-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35cqw;
+  min-width: 0;
 }
 
 .loop-box-n {
@@ -702,15 +773,19 @@ body {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.16em;
-  color: color-mix(in srgb, var(--color-paper) 45%, transparent);
+  color: color-mix(in srgb, var(--color-accent-100) 55%, transparent);
 }
 
 .loop-box-name {
-  font-size: 3.4cqw;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-paper);
+  display: block;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 3cqw;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-accent-100);
+  white-space: nowrap;
 }
 
 @media (min-width: 1024px) {
@@ -865,12 +940,28 @@ body {
 
 .stage-note-kicker {
   display: block;
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 0.625rem;
-  font-weight: 500;
-  letter-spacing: 0.26em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-paper) 70%, transparent);
+  color: color-mix(in srgb, var(--color-accent-100) 80%, var(--color-paper) 20%);
   white-space: nowrap;
+}
+
+/* The problem cards' kicker label, on the board — shared by the
+   desktop cluster and the mobile stacked cards. */
+.card-kicker {
+  display: block;
+  margin-bottom: 1rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-accent-100) 82%, var(--color-paper) 18%);
 }
 
 .stage-note-body {

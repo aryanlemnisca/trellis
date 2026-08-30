@@ -6,6 +6,7 @@ import {
   LOOP_VIEW,
 } from "@/lib/stage/loop-diagram";
 import type { Stage as LoopStage } from "./content";
+import { LOOP_ICONS } from "./LoopIcons";
 
 /**
  * LoopDiagram — the six stages as a wired loop, drawn on the board.
@@ -86,10 +87,15 @@ export function LoopDiagram({
               } as React.CSSProperties
             }
           >
-            <span className="loop-box-n">
-              {String(i + 1).padStart(2, "0")}
+            <span className="loop-box-icon" aria-hidden>
+              {LOOP_ICONS[stage.name]?.()}
             </span>
-            <span className="loop-box-name">{stage.name}</span>
+            <span className="loop-box-text">
+              <span className="loop-box-n">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className="loop-box-name">{stage.name}</span>
+            </span>
           </li>
         ))}
       </ol>

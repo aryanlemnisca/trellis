@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Glass, GlassPulse, GlassScene } from "@/components/glass";
+import { Glass, GlassButton, GlassPulse, GlassScene } from "@/components/glass";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BenchmarkPlot } from "./BenchmarkPlot";
 import { LoopCaption, LoopDiagram } from "./LoopDiagram";
@@ -299,13 +299,13 @@ export function Stage() {
               }
             >
             <Eyebrow>{chapter.kicker}</Eyebrow>
-            <h2 className="max-w-[19ch] text-[clamp(1.875rem,3.4vw,2.875rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-ink">
+            <h2 className="max-w-[19ch] font-serif text-[clamp(1.875rem,3.4vw,2.875rem)] font-bold leading-[1.08] tracking-[-0.01em] text-ink">
               {chapter.heading}
             </h2>
             {chapter.body.map((paragraph, p) => (
               <p
                 key={p}
-                className="max-w-[48ch] text-[0.9375rem] leading-relaxed text-ink-500"
+                className="max-w-[48ch] font-serif text-[0.9375rem] leading-relaxed text-ink-500"
               >
                 {paragraph}
               </p>
@@ -435,11 +435,9 @@ export function Stage() {
                 key={CARDS[card].kicker}
                 className={`stage-card ${slot} absolute flex flex-col px-9 py-8`}
               >
-                <span className="mb-4 text-[0.6875rem] font-medium uppercase tracking-[0.26em] text-paper/75">
-                  {CARDS[card].kicker}
-                </span>
+                <span className="card-kicker">{CARDS[card].kicker}</span>
                 <div className="mb-4">{CARDS[card].figure}</div>
-                <p className="text-[0.875rem] leading-relaxed text-paper/90">
+                <p className="font-serif text-[0.875rem] leading-relaxed text-paper/90">
                   {CARDS[card].body}
                 </p>
               </Glass>
@@ -479,29 +477,29 @@ function HeroCopy() {
         style={{ "--i": 0 } as React.CSSProperties}
         className="hero-rise absolute left-6 top-[calc(34dvh+1.75rem)] flex items-end gap-2.5 sm:left-10 lg:left-14 lg:top-10 xl:left-20"
       >
-        <span className="text-[2rem] font-semibold leading-none tracking-[-0.035em] text-ink">
+        <span className="font-serif text-[2rem] font-bold leading-none tracking-[-0.02em] text-ink">
           Trellis
         </span>
         <span className="flex flex-col text-[0.6875rem] font-medium leading-[1.25] tracking-[0.01em]">
-          <span className="text-ink-500">by</span>
-          <span className="text-ink-700">Lemnisca</span>
+          <span className="text-accent">by</span>
+          <span className="font-serif italic text-accent">Lemnisca</span>
         </span>
       </p>
       <h1
         style={{ "--i": 0 } as React.CSSProperties}
-        className="hero-rise max-w-[16ch] text-[clamp(2.25rem,5.2vw,4.25rem)] font-semibold leading-[1.02] tracking-[-0.035em] text-ink"
+        className="hero-rise max-w-[16ch] font-serif text-[clamp(2.25rem,5.2vw,4.25rem)] font-bold leading-[1.02] tracking-[-0.01em] text-ink"
       >
         The shortest path for your bioprocess
       </h1>
       <p
         style={{ "--i": 1 } as React.CSSProperties}
-        className="hero-rise text-[clamp(1rem,1.35vw,1.1875rem)] font-medium text-ink-700"
+        className="hero-rise font-serif text-[clamp(1rem,1.35vw,1.1875rem)] font-bold italic text-accent"
       >
         from plate to pilot to production
       </p>
       <p
         style={{ "--i": 2 } as React.CSSProperties}
-        className="hero-rise max-w-[46ch] text-[0.9375rem] leading-relaxed text-ink-500"
+        className="hero-rise max-w-[46ch] font-serif text-[0.9375rem] leading-relaxed text-ink-500"
       >
         Every bioprocess is a large, partially observed system. Trellis builds
         one evolving model of yours, so each experiment adds the evidence your
@@ -511,18 +509,23 @@ function HeroCopy() {
         style={{ "--i": 3 } as React.CSSProperties}
         className="hero-rise flex flex-wrap items-center gap-3 pt-2"
       >
-        <a
+        <GlassButton
           href="#start"
-          className="rounded-full bg-ink px-6 py-3 text-sm font-medium text-paper transition-colors duration-150 ease-in hover:bg-ink-700"
+          variant="dark"
+          backdropClassName="rounded-full glass-button-slab-accent"
+          delayMs={1950}
         >
           Book a call
-        </a>
-        <a
+        </GlassButton>
+        <GlassButton
           href="#how-it-works"
-          className="rounded-full px-6 py-3 text-sm font-medium text-ink-700 ring-1 ring-ink-300 transition-colors duration-150 ease-in hover:bg-ink-100"
+          variant="frosted"
+          backdropClassName="rounded-full glass-button-slab-light"
+          labelClassName="text-accent"
+          delayMs={1950}
         >
           See how it works
-        </a>
+        </GlassButton>
       </div>
 
       {/* Stacked hero panel. */}
@@ -629,11 +632,9 @@ function ProblemStill({ cards }: { cards: Card[] }) {
         >
           <div aria-hidden className="stage-grid absolute inset-0 opacity-70" />
           <div className="relative flex flex-col">
-            <span className="mb-4 text-[0.6875rem] font-medium uppercase tracking-[0.26em] text-paper/75">
-              {card.kicker}
-            </span>
+            <span className="card-kicker">{card.kicker}</span>
             <div className="mb-4">{card.figure}</div>
-            <p className="text-[0.875rem] leading-relaxed text-paper/90">
+            <p className="font-serif text-[0.875rem] leading-relaxed text-paper/90">
               {card.body}
             </p>
           </div>
@@ -680,10 +681,10 @@ function Closing() {
     <div className="grid h-full grid-cols-1 items-center gap-10 xl:grid-cols-[1fr_minmax(0,24rem)]">
       <div className="flex flex-col gap-6">
         <Eyebrow onBoard>Start here</Eyebrow>
-        <h2 className="max-w-[15ch] text-[clamp(1.75rem,3.4vw,3rem)] font-semibold leading-[1.04] tracking-[-0.03em] text-paper">
+        <h2 className="max-w-[15ch] font-serif text-[clamp(1.75rem,3.4vw,3rem)] font-bold leading-[1.04] tracking-[-0.01em] text-paper">
           Bring us the development decision you&apos;re still uncertain about.
         </h2>
-        <p className="max-w-[42ch] text-[0.9375rem] leading-relaxed text-paper/65">
+        <p className="max-w-[42ch] font-serif text-[0.9375rem] leading-relaxed text-paper/65">
           Start with one real decision, not a platform migration. We configure
           Trellis around it and you keep every assumption in view.
         </p>
@@ -691,32 +692,35 @@ function Closing() {
 
       {/* Not a glass panel, though it is a box on the board: a panel has
           to be a DIRECT child of the scene root, and this one is three
-          wrappers deep inside the closing grid. A paper hairline over the
-          field is the honest substitute. */}
-      <div className="stage-closing-card rounded-[28px] border border-paper/15 bg-paper/[0.06] p-8">
+          wrappers deep inside the closing grid. An accent hairline over
+          the field is the honest substitute. */}
+      <div className="stage-closing-card rounded-[28px] border border-accent-100/25 bg-accent/[0.12] p-8">
         <ol className="flex flex-col gap-6">
           {CLOSING_STEPS.map((step) => (
             <li key={step.n} className="flex gap-4">
-              <span className="pt-0.5 text-xs font-semibold tabular-nums text-paper/40">
+              <span className="pt-0.5 text-xs font-semibold tabular-nums text-accent-100/50">
                 {step.n}
               </span>
               <div className="flex flex-col gap-1">
-                <span className="text-sm font-semibold text-paper">
+                <span className="font-serif text-sm font-bold italic text-accent-100">
                   {step.title}
                 </span>
-                <span className="text-[0.8125rem] leading-relaxed text-paper/60">
+                <span className="font-serif text-[0.8125rem] leading-relaxed text-paper/60">
                   {step.body}
                 </span>
               </div>
             </li>
           ))}
         </ol>
-        <a
-          href="mailto:shilpa@lemnisca.bio?subject=Trellis%20—%20a%20development%20decision"
-          className="mt-8 inline-flex rounded-full bg-paper px-6 py-3 text-sm font-medium text-ink transition-colors duration-150 ease-in hover:bg-ink-100"
+        <GlassButton
+          href="mailto:shilpa@lemnisca.bio?subject=Trellis%20-%20a%20development%20decision"
+          variant="frosted"
+          backdropClassName="rounded-full glass-button-slab-light"
+          labelClassName="text-ink"
+          className="mt-8"
         >
           Start with one decision
-        </a>
+        </GlassButton>
       </div>
     </div>
   );

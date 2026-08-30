@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from "react";
 const ITEMS = [
   {
     q: "We only have a handful of runs. Is that enough to start?",
-    a: "That is the case Trellis is built for. It combines whatever experimental evidence you already have with published process knowledge, so the first model is grounded even when the run count is small — and every run after that sharpens it.",
+    a: "That is the case Trellis is built for. It combines whatever experimental evidence you already have with published process knowledge, so the first model is grounded even when the run count is small, and every run after that sharpens it.",
   },
   {
     q: "How is this different from DoE?",
@@ -67,15 +67,15 @@ export function Faq() {
   return (
     <section id="faq" className="relative px-6 pb-28 pt-24 sm:px-10 lg:px-14 xl:px-20">
       <div className="mx-auto w-full max-w-5xl">
-        <h2 className="mb-12 text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-[-0.03em] text-ink">
+        <h2 className="mb-12 font-serif text-[clamp(1.75rem,3vw,2.5rem)] font-bold tracking-[-0.01em] text-ink">
           Questions we get asked
         </h2>
 
-        <div className="border-t border-ink-300">
+        <div className="border-t border-accent/20">
           {ITEMS.map((item, i) => {
             const isOpen = open === i;
             return (
-              <div key={item.q} className="border-b border-ink-300">
+              <div key={item.q} className="border-b border-accent/20">
                 <h3>
                   <button
                     type="button"
@@ -84,7 +84,7 @@ export function Faq() {
                     onClick={() => setOpen(isOpen ? null : i)}
                     className="faq-row flex w-full items-center justify-between gap-8 py-6 text-left"
                   >
-                    <span className="faq-q text-[clamp(1rem,1.5vw,1.1875rem)] font-medium text-ink">
+                    <span className="faq-q font-serif text-[clamp(1rem,1.5vw,1.1875rem)] font-bold text-ink">
                       {item.q}
                     </span>
                     <span
@@ -105,7 +105,7 @@ export function Faq() {
                       answerRefs.current[i] = node;
                     }}
                   >
-                    <p className="max-w-[68ch] pb-7 text-[0.9375rem] leading-relaxed text-ink-500">
+                    <p className="max-w-[68ch] pb-7 font-serif text-[0.9375rem] leading-relaxed text-ink-500">
                       {item.a}
                     </p>
                   </div>

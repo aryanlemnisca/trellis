@@ -30,7 +30,7 @@ OUT = "public/illustration"
 
 # Must match --color-board in globals.css: the loop overlay knocks the
 # mesh out behind its nodes by painting the board colour over it.
-BOARD = "#000000"
+BOARD = "#0a1a26"
 
 BUMPS = [
     (0.20, 0.42, 0.11, 0.17, 0.44),
