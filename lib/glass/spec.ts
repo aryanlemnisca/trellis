@@ -3,10 +3,11 @@ import type { GlassConfig } from "@ybouane/liquidglass";
 /**
  * The house glass recipes.
  *
- * `panel` is the tuned Interactive Playground state from
- * https://liquid-glass.ybouane.com/, 1:1 — every large surface on the
- * board renders it verbatim. The three button recipes are the demo's
- * own button variants, sized for a control rather than a panel.
+ * `panel` started as the tuned Interactive Playground state from
+ * https://liquid-glass.ybouane.com/ (corner/z radius since tightened for a
+ * less rounded card look) — every large surface on the board renders it.
+ * The three button recipes are the demo's own button variants, sized for a
+ * control rather than a panel.
  *
  * Pick a variant. Don't invent numbers: a one-off tweak stops looking
  * like the tuned reference, and the optical values are not overridable
@@ -27,7 +28,7 @@ const BASE = {
 /**
  * The panel recipe — large surfaces on the board.
  *
- * `zRadius: 100` needs room: a panel under roughly 250px on its short
+ * `zRadius: 56` needs room: a panel under roughly 140px on its short
  * edge has its whole surface swallowed by the bevel and reads as a flat
  * frosted box rather than glass. Size the panel to the spec.
  */
@@ -40,8 +41,8 @@ export const GLASS_SPEC: GlassConfig = {
   edgeHighlight: 0.05,
   specular: 0,
   fresnel: 1,
-  cornerRadius: 100,
-  zRadius: 100,
+  cornerRadius: 56,
+  zRadius: 56,
   saturation: 0,
   tintStrength: 0,
   brightness: 0,

@@ -275,6 +275,7 @@ export function Stage() {
         {CHAPTERS.map((chapter, i) => (
           <article
             key={chapter.kicker}
+            id={chapter.id}
             ref={(node) => {
               chapterRefs.current[i] = node;
             }}
@@ -514,13 +515,13 @@ function HeroCopy() {
           href="#start"
           className="rounded-full bg-ink px-6 py-3 text-sm font-medium text-paper transition-colors duration-150 ease-in hover:bg-ink-700"
         >
-          Start with one decision
+          Book a call
         </a>
         <a
-          href="#faq"
+          href="#how-it-works"
           className="rounded-full px-6 py-3 text-sm font-medium text-ink-700 ring-1 ring-ink-300 transition-colors duration-150 ease-in hover:bg-ink-100"
         >
-          Questions we get asked
+          See how it works
         </a>
       </div>
 
@@ -624,7 +625,7 @@ function ProblemStill({ cards }: { cards: Card[] }) {
       {cards.map((card) => (
         <div
           key={card.kicker}
-          className="relative overflow-hidden rounded-[24px] bg-board p-6 ring-1 ring-inset ring-paper/12"
+          className="relative overflow-hidden rounded-[16px] bg-board p-6 ring-1 ring-inset ring-paper/12"
         >
           <div aria-hidden className="stage-grid absolute inset-0 opacity-70" />
           <div className="relative flex flex-col">

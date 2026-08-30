@@ -295,6 +295,8 @@ export type Chapter = {
   body: string[];
   /** Extra content under the copy — the benchmark figures, so far. */
   aside?: ReactNode;
+  /** Scroll anchor for chapters a nav link jumps to directly. */
+  id?: string;
 };
 
 /** Chapters map onto beats 1–4; the hero occupies beat 0. */
@@ -314,6 +316,7 @@ export const CHAPTERS: Chapter[] = [
   },
   {
     kicker: "How it works",
+    id: "how-it-works",
     heading: (
       <>
         A learning loop the{" "}
