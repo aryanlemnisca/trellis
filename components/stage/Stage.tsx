@@ -5,6 +5,7 @@ import { Glass, GlassButton, GlassPulse, GlassScene } from "@/components/glass";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BenchmarkPlot } from "./BenchmarkPlot";
 import { LoopCaption, LoopDiagram } from "./LoopDiagram";
+import { LOOP_CLOSED_AT } from "@/lib/stage/loop-diagram";
 import {
   BEATS,
   CHAPTERS,
@@ -90,6 +91,32 @@ const HERO_ALT =
 
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 const smoothstep = (n: number) => n * n * (3 - 2 * n);
+
+/**
+ * "See how it works" has to land past the point the loop closes, not on
+ * the chapter's own top edge — a plain `#how-it-works` anchor jumps to
+ * p2≈0, where only the first box or two have arrived, since the loop
+ * reveals against scroll (see lib/stage/loop-diagram.ts). This solves
+ * the SAME formula the scroll writer uses for `--p2` for the scroll
+ * offset that lands just past `LOOP_CLOSED_AT`, so the reader arrives on
+ * the finished, closed loop instead of having to scroll it open by hand.
+ *
+ * Below `lg` there is no scroll-jacked reveal — `LoopStill` is always
+ * fully drawn — so a plain scroll to the chapter's top is enough there.
+ */
+function scrollToLoopChapter() {
+  const el = document.getElementById("how-it-works");
+  if (!el) return;
+  if (!window.matchMedia("(min-width: 1024px)").matches) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  const rect = el.getBoundingClientRect();
+  const elTop = window.scrollY + rect.top;
+  const targetProgress = LOOP_CLOSED_AT + 0.1;
+  const target = elTop - window.innerHeight * 0.55 + targetProgress * rect.height;
+  window.scrollTo({ top: target, behavior: "smooth" });
+}
 
 export function Stage() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -463,11 +490,13 @@ function HeroCopy() {
   return (
     <div
       data-beat={0}
-      className="stage-hero relative flex min-h-dvh flex-col justify-center gap-5 px-6 pb-12 pt-[calc(34dvh+2.5rem)] sm:gap-6 sm:px-10 lg:pt-0 lg:pb-0 lg:px-14 xl:px-20"
+      className="stage-hero relative flex min-h-dvh flex-col justify-center gap-5 px-6 pb-12 pt-8 sm:gap-6 sm:px-10 lg:pt-0 lg:pb-0 lg:px-14 xl:px-20"
     >
-      {/* The wordmark, parked in the hero's top-left corner rather than
-          stacked into the centred copy — it identifies the page, so it
-          sits where a masthead sits, not in the reading column.
+      {/* The wordmark. Below `lg` it opens the stack in normal flow —
+          mark, then illustration, then the heading — rather than sitting
+          in the reading column. From `lg` it detaches into the hero's
+          top-left corner, a fixed masthead independent of the centred
+          copy's own vertical position.
 
           The lockup is the product name at size with "by / Lemnisca"
           stacked small beside it, both blocks sharing a bottom edge:
@@ -475,16 +504,35 @@ function HeroCopy() {
           baselines together without a nudge. */}
       <p
         style={{ "--i": 0 } as React.CSSProperties}
-        className="hero-rise absolute left-6 top-[calc(34dvh+1.75rem)] flex items-end gap-2.5 sm:left-10 lg:left-14 lg:top-10 xl:left-20"
+        className="hero-rise flex items-end gap-2.5 lg:absolute lg:left-14 lg:top-10 xl:left-20"
       >
         <span className="font-serif text-[2rem] font-bold leading-none tracking-[-0.02em] text-ink">
           Trellis
         </span>
-        <span className="flex flex-col text-[0.6875rem] font-medium leading-[1.25] tracking-[0.01em]">
-          <span className="text-accent">by</span>
-          <span className="font-serif italic text-accent">Lemnisca</span>
+        <span className="flex flex-col items-start gap-0.5">
+          <span className="text-[0.6875rem] font-medium leading-[1.25] tracking-[0.01em] text-accent">
+            by
+          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/lemnisca-wordmark.svg" alt="Lemnisca" className="h-[13px] w-auto" />
         </span>
       </p>
+
+      {/* The hero illustration, stacked here below `lg` only — above the
+          heading, between the wordmark and the copy. */}
+      <div
+        style={{ "--i": 0 } as React.CSSProperties}
+        className="stage-hero-panel hero-rise relative -mx-6 h-[30vh] overflow-hidden rounded-[28px] bg-board sm:-mx-10 lg:hidden"
+      >
+        <div aria-hidden className="stage-grid absolute inset-0" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/illustration/path-light.png"
+          alt={HERO_ALT}
+          className="absolute inset-0 h-full w-full object-contain p-5"
+        />
+      </div>
+
       <h1
         style={{ "--i": 0 } as React.CSSProperties}
         className="hero-rise max-w-[16ch] font-serif text-[clamp(2.25rem,5.2vw,4.25rem)] font-bold leading-[1.02] tracking-[-0.01em] text-ink"
@@ -518,7 +566,7 @@ function HeroCopy() {
           Book a call
         </GlassButton>
         <GlassButton
-          href="#how-it-works"
+          onClick={scrollToLoopChapter}
           variant="frosted"
           backdropClassName="rounded-full glass-button-slab-light"
           labelClassName="text-accent"
@@ -528,16 +576,6 @@ function HeroCopy() {
         </GlassButton>
       </div>
 
-      {/* Stacked hero panel. */}
-      <div className="stage-hero-panel absolute inset-x-0 top-0 h-[34dvh] overflow-hidden rounded-b-[36px] bg-board lg:hidden">
-        <div aria-hidden className="stage-grid absolute inset-0" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/illustration/path-light.png"
-          alt={HERO_ALT}
-          className="absolute inset-0 h-full w-full object-contain p-5"
-        />
-      </div>
     </div>
   );
 }
@@ -719,7 +757,7 @@ function Closing() {
           labelClassName="text-ink"
           className="mt-8"
         >
-          Start with one decision
+          Book a call
         </GlassButton>
       </div>
     </div>

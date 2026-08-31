@@ -15,9 +15,12 @@ export function Footer() {
             <span className="text-[clamp(0.875rem,1.4vw,1.375rem)] text-accent">
               by
             </span>
-            <span className="font-serif text-[clamp(1.75rem,5vw,4.25rem)] font-bold italic leading-none tracking-[-0.01em] text-accent">
-              Lemnisca
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/lemnisca-wordmark.svg"
+              alt="Lemnisca"
+              className="h-[clamp(1.75rem,5vw,4.25rem)] w-auto"
+            />
           </span>
         </div>
       </div>

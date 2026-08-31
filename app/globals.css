@@ -20,7 +20,7 @@
      step already tuned against it (loop track, plot axes, card ring)
      still reads at the same contrast. */
   --color-ink: #000000;
-  --color-paper: #ffffff;
+  --color-paper: #fffbf6;
   --color-ink-900: #0a0a0a;
   --color-ink-700: #262626;
   --color-ink-500: #737373;
@@ -518,13 +518,16 @@ body {
 .plot-axis-label,
 .plot-tick {
   fill: color-mix(in srgb, var(--color-paper) 58%, transparent);
-  font-size: 1.95cqw;
+  /* `cqw` alone shrinks past legibility once this SVG sits in a narrow
+     mobile card instead of the wide board panel it was tuned for — the
+     clamp floor is a fixed, container-independent minimum. */
+  font-size: clamp(0.625rem, 1.95cqw, 999px);
   font-weight: 500;
   letter-spacing: 0.18em;
 }
 
 .plot-tick {
-  font-size: 2.1cqw;
+  font-size: clamp(0.6875rem, 2.1cqw, 999px);
   letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }
@@ -559,14 +562,14 @@ body {
 
 .plot-label-name {
   fill: color-mix(in srgb, var(--color-paper) 72%, transparent);
-  font-size: 2cqw;
+  font-size: clamp(0.625rem, 2cqw, 999px);
   font-weight: 500;
   letter-spacing: 0.18em;
 }
 
 .plot-label-value {
   fill: color-mix(in srgb, var(--color-paper) 72%, transparent);
-  font-size: 3.4cqw;
+  font-size: clamp(0.875rem, 3.4cqw, 999px);
   font-weight: 600;
   letter-spacing: -0.015em;
   font-variant-numeric: tabular-nums;
@@ -575,7 +578,7 @@ body {
 /* The lead's own figure is set larger here too, so the plot and the
    copy column tell the same story at a glance. */
 [data-lead="true"] .plot-label-value {
-  font-size: 4.4cqw;
+  font-size: clamp(1.125rem, 4.4cqw, 999px);
 }
 
 [data-lead="true"] .plot-label-name,
@@ -1072,32 +1075,6 @@ body {
   .stage-overlay {
     opacity: 0;
     clip-path: inset(0 100% 0 0);
-  }
-}
-
-/* ── Stacked hero panel ──────────────────────────────────────────────
-   Same inverse-transform trick, sized for a 100vw × 34dvh panel flush to
-   the top: scale = 100/34 = 2.9412, translateY = 50 − 17 = 33dvh.     */
-
-@media (max-width: 1023.98px) {
-  .stage-hero-panel {
-    transform-origin: center;
-    will-change: transform;
-    animation: stage-hero-panel-settle 1500ms cubic-bezier(0.65, 0, 0.35, 1)
-      250ms both;
-  }
-}
-
-@keyframes stage-hero-panel-settle {
-  0% {
-    transform: translateY(33dvh) scale(2.9412);
-  }
-  45% {
-    transform: translateY(33dvh) scale(1.06);
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  100% {
-    transform: translateY(0) scale(1);
   }
 }
 
