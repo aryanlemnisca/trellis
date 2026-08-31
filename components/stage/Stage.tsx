@@ -518,7 +518,7 @@ function HeroCopy() {
           heading, between the wordmark and the copy. */}
       <div
         style={{ "--i": 0 } as React.CSSProperties}
-        className="stage-hero-panel hero-rise relative -mx-6 h-[30vh] overflow-hidden rounded-[28px] bg-board sm:-mx-10 lg:hidden"
+        className="stage-hero-panel hero-rise relative -mx-6 h-[30vh] overflow-hidden bg-board sm:-mx-10 lg:hidden"
       >
         <div aria-hidden className="stage-grid absolute inset-0" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -704,7 +704,7 @@ function ChartStill() {
   return (
     <div
       style={{ "--t": 1 } as React.CSSProperties}
-      className="relative -mx-6 mt-4 overflow-hidden rounded-[28px] bg-board p-5 sm:-mx-10 lg:hidden"
+      className="relative -mx-6 mt-4 overflow-hidden bg-board p-5 sm:-mx-10 lg:hidden"
     >
       <div aria-hidden className="stage-grid absolute inset-0" />
       <BenchmarkPlot className="relative" />
