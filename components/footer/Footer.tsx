@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer className="relative overflow-hidden px-6 pb-10 pt-24 sm:px-10 lg:px-14 xl:px-20">
       <div className="mx-auto w-full max-w-6xl">
-        <div className="flex flex-wrap items-end justify-center gap-x-5">
+        <a href="https://lemnisca.bio" className="flex flex-wrap items-end justify-center gap-x-5">
           <span className="font-serif text-[clamp(4rem,17vw,15rem)] font-bold leading-[0.78] tracking-[-0.02em] text-ink">
             TRELLIS
           </span>
@@ -22,7 +22,7 @@ export function Footer() {
               className="h-[clamp(1.75rem,5vw,4.25rem)] w-auto"
             />
           </span>
-        </div>
+        </a>
       </div>
     </footer>
   );

@@ -498,7 +498,8 @@ function HeroCopy() {
           stacked small beside it, both blocks sharing a bottom edge:
           neither word carries a descender, so `items-end` lands the two
           baselines together without a nudge. */}
-      <p
+      <a
+        href="https://lemnisca.bio"
         style={{ "--i": 0 } as React.CSSProperties}
         className="hero-rise flex items-end gap-2.5 lg:absolute lg:left-14 lg:top-10 xl:left-20"
       >
@@ -512,7 +513,7 @@ function HeroCopy() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/lemnisca-wordmark.svg" alt="Lemnisca" className="h-[13px] w-auto" />
         </span>
-      </p>
+      </a>
 
       {/* The hero illustration, stacked here below `lg` only — above the
           heading, between the wordmark and the copy. */}
