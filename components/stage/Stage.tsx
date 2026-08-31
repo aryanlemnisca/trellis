@@ -704,7 +704,7 @@ function ChartStill() {
   return (
     <div
       style={{ "--t": 1 } as React.CSSProperties}
-      className="relative mt-4 overflow-hidden rounded-[28px] bg-board p-5 lg:hidden"
+      className="relative -mx-6 mt-4 overflow-hidden rounded-[28px] bg-board p-5 sm:-mx-10 lg:hidden"
     >
       <div aria-hidden className="stage-grid absolute inset-0" />
       <BenchmarkPlot className="relative" />
