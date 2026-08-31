@@ -47,6 +47,7 @@ const sx = (t: number) => x0 + (t / 100) * (x1 - x0);
 const sy = (v: number) => yBase - (v / 100) * (yBase - yTop);
 
 const TICKS = [0, 50, 100];
+const X_TICKS = [0, 20, 40, 60, 80];
 
 /**
  * Draw windows, as shares of `--p`. Everything has landed by 0.64 so the
@@ -85,9 +86,14 @@ export function BenchmarkPlot({ className }: { className?: string }) {
               {t}
             </text>
           ))}
+          {X_TICKS.map((t) => (
+            <text key={t} className="plot-tick" x={sx(t)} y={yBase + 28} textAnchor="middle">
+              {t}
+            </text>
+          ))}
         </g>
 
-        <text className="plot-axis-label" x={x0} y={yBase + 46}>
+        <text className="plot-axis-label" x={x0} y={yBase + 62}>
           EXPERIMENTS RUN
         </text>
         <text
