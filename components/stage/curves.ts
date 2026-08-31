@@ -25,16 +25,3 @@ export function smoothPath(points: Array<[number, number]>): string {
   }
   return d;
 }
-
-/** y = ceiling · (1 − e^(−k·x)) — the shape of a converging search. */
-export function saturating(
-  ceiling: number,
-  k: number,
-  steps = 40,
-  domain = 100,
-): Array<[number, number]> {
-  return Array.from({ length: steps + 1 }, (_, n) => {
-    const x = (n / steps) * domain;
-    return [x, ceiling * (1 - Math.exp(-k * x))] as [number, number];
-  });
-}

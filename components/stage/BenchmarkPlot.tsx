@@ -1,5 +1,13 @@
 import { BENCHMARK, BENCHMARK_LEAD } from "@/lib/stage/benchmark";
-import { linePath, saturating } from "./curves";
+import { BENCHMARK_BANDS, BENCHMARK_CURVES } from "@/lib/stage/benchmark-curves";
+import { linePath } from "./curves";
+
+/** Upper edge left-to-right, lower edge back right-to-left, closed — the band as one filled shape. */
+function bandPath(upper: Array<[number, number]>, lower: Array<[number, number]>): string {
+  const top = upper.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`);
+  const bottom = [...lower].reverse().map(([x, y]) => `L ${x.toFixed(2)} ${y.toFixed(2)}`);
+  return [...top, ...bottom, "Z"].join(" ");
+}
 
 /**
  * BenchmarkPlot — the convergence chart, plotted on the board.
@@ -8,6 +16,12 @@ import { linePath, saturating } from "./curves";
  * loop diagram: the labels have to render in Inter (an SVG loaded
  * through <img> cannot fetch a webfont), and the curves draw themselves
  * against scroll, which a static file can't do.
+ *
+ * The curves themselves are real data, not a fitted approximation —
+ * see `lib/stage/benchmark-curves.ts`. Real data doesn't land exactly on
+ * the rounded headline figure, so labels are positioned off the curve's
+ * own endpoint rather than off `BENCHMARK.value`, or they'd float just
+ * off the line they're meant to be labelling.
  *
  * Every reveal is CSS reading `--p`. Each curve is a path with
  * `pathLength="1"`, so its dash offset IS its progress — the three climb
@@ -22,8 +36,6 @@ import { linePath, saturating } from "./curves";
 const W = 1000;
 const H = 760;
 const PAD = { l: 96, r: 210, t: 74, b: 96 };
-/** Dense enough that straight segments read as a smooth curve. */
-const SAMPLES = 140;
 
 const x0 = PAD.l;
 const x1 = W - PAD.r;
@@ -89,8 +101,13 @@ export function BenchmarkPlot({ className }: { className?: string }) {
         </text>
 
         {BENCHMARK.map((series, i) => {
-          const points = saturating(series.value, series.k, SAMPLES).map(
-            ([t, v]) => [sx(t), sy(v)] as [number, number],
+          const curve = BENCHMARK_CURVES[series.name];
+          const points = curve.map(([t, v]) => [sx(t), sy(v)] as [number, number]);
+          const endValue = curve[curve.length - 1][1];
+          const band = BENCHMARK_BANDS[series.name];
+          const bandD = bandPath(
+            band.upper.map(([t, v]) => [sx(t), sy(v)] as [number, number]),
+            band.lower.map(([t, v]) => [sx(t), sy(v)] as [number, number]),
           );
           const from = CURVE_FROM + i * CURVE_STAGGER;
           const timing = { "--from": from, "--dur": CURVE_DUR } as React.CSSProperties;
@@ -98,10 +115,13 @@ export function BenchmarkPlot({ className }: { className?: string }) {
           // The lead's value is set larger (see [data-lead] in globals.css),
           // so it needs more clearance below the name or the two collide —
           // a fixed gap tuned for the smaller non-lead size isn't enough.
-          const nameY = sy(series.value) - (isLead ? 8 : 4);
-          const valueY = sy(series.value) + (isLead ? 36 : 26);
+          const nameY = sy(endValue) - (isLead ? 8 : 4);
+          const valueY = sy(endValue) + (isLead ? 36 : 26);
           return (
             <g key={series.name} data-lead={isLead}>
+              {/* The real spread each strategy actually ran inside — wipes
+                  in with the same clock as its own line, not a separate one. */}
+              <path className="plot-band" d={bandD} style={timing} />
               <path
                 className="plot-curve"
                 d={linePath(points)}

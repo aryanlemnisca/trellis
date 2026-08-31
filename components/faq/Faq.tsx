@@ -25,7 +25,7 @@ const ITEMS = [
     a: "That is the case Trellis is built for. It combines whatever experimental evidence you already have with published process knowledge, so the first model is grounded even when the run count is small, and every run after that sharpens it.",
   },
   {
-    q: "How is this different from DoE?",
+    q: "How is this different from traditional DoE?",
     a: "DoE fixes the whole experimental programme up front and spreads runs evenly across the design space. Trellis chooses each round from what the current model knows, balancing exploration of uncertain regions against exploitation of promising ones. On the same benchmark process that difference was roughly 77% versus effectively the full optimum.",
   },
   {

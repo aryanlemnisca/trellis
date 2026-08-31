@@ -41,6 +41,9 @@ export type GlassButtonProps = {
   variant?: Exclude<GlassVariant, "panel">;
   /** Renders an <a> when set, a <button> otherwise. */
   href?: string;
+  /** For an external `href` — e.g. `"_blank"` with `rel="noopener noreferrer"`. */
+  target?: string;
+  rel?: string;
   onClick?: () => void;
   type?: "button" | "submit";
   /** Classes for the scene wrapper — margins and layout live here. */
@@ -72,6 +75,8 @@ export function GlassButton({
   children,
   variant = "dark",
   href,
+  target,
+  rel,
   onClick,
   type = "button",
   className,
@@ -103,7 +108,7 @@ export function GlassButton({
       {backdrop}
       <Glass variant={variant} className="glass-button relative">
         {href ? (
-          <a href={href} aria-label={ariaLabel} className="block">
+          <a href={href} target={target} rel={rel} aria-label={ariaLabel} className="block">
             {label}
           </a>
         ) : (

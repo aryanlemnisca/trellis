@@ -38,20 +38,16 @@ const CARDS = PROBLEM_CARDS;
 /**
  * Which card sits in which slot on the board.
  *
- * Card 03 is centred on the canvas, with 02 attached at its top right
- * and 01 at its bottom left. The geometry itself lives in globals.css,
- * anchored to the centre card, so the composition holds when the cards
- * hit their max width and stop scaling with the panel.
- *
- * Listed in PAINT order, not card order — a card laps over whichever
- * came before it, and the cascade reads top right, centre, bottom left.
- * Reordering the cards themselves rather than the slots is what keeps
- * that layering fixed while the contents move between slots.
+ * A plain vertical stack, top to bottom in card order — no overlap, so
+ * paint order doesn't matter the way it did for the old corner cascade.
+ * The geometry (fixed height per card, so absolutely-positioned siblings
+ * can stack without knowing each other's real content height) lives in
+ * globals.css.
  */
 const CARD_SLOTS = [
-  { slot: "stage-card-tr", card: 1 },
-  { slot: "stage-card-mid", card: 2 },
-  { slot: "stage-card-bl", card: 0 },
+  { slot: "stage-card-1", card: 0 },
+  { slot: "stage-card-2", card: 1 },
+  { slot: "stage-card-3", card: 2 },
 ];
 
 /**
@@ -558,7 +554,9 @@ function HeroCopy() {
         className="hero-rise flex flex-wrap items-center gap-3 pt-2"
       >
         <GlassButton
-          href="#start"
+          href="https://calendar.app.google/S4eAAiz6Nn8kGZpJ9"
+          target="_blank"
+          rel="noopener noreferrer"
           variant="dark"
           backdropClassName="rounded-full glass-button-slab-accent"
           delayMs={1950}
@@ -750,15 +748,21 @@ function Closing() {
             </li>
           ))}
         </ol>
-        <GlassButton
-          href="mailto:shilpa@lemnisca.bio?subject=Trellis%20-%20a%20development%20decision"
-          variant="frosted"
-          backdropClassName="rounded-full glass-button-slab-light"
-          labelClassName="text-ink"
-          className="mt-8"
+        {/* Plain CSS, not <GlassButton>: nested this deep inside the
+            closing panel — which itself keeps resizing as `--e` opens
+            it — the button's own WebGL scene measures itself against a
+            moving target and never settles into a crisp render, dark or
+            frosted alike. A solid fill sidesteps that entirely and reads
+            with more contrast against the card than a translucent pane
+            would anyway. */}
+        <a
+          href="https://calendar.app.google/S4eAAiz6Nn8kGZpJ9"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-8 inline-flex items-center justify-center rounded-full bg-accent px-7 py-3.5 font-serif text-sm font-bold text-paper transition-colors duration-150 ease-in hover:bg-accent-700"
         >
           Book a call
-        </GlassButton>
+        </a>
       </div>
     </div>
   );

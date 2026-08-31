@@ -342,9 +342,10 @@ body {
 
   /* ── Card panels ───────────────────────────────────────────────────
      One cluster, one motion. The three hold fixed positions relative to
-     each other — a cascade from the top right down to the lower left,
-     each overlapping the last — and the whole group slides on and off
-     the board as a rigid object.
+     each other — a plain vertical stack, top to bottom in card order,
+     with a real gap between them rather than the corner-cascade overlap
+     this replaced (which read as messy seams once the board went navy) —
+     and the whole group slides on and off the board as a rigid object.
 
      Everything comes off `--p1`, chapter 01's own scroll progress, and
      NOTHING here transitions. That is the point: scroll is the only
@@ -371,50 +372,44 @@ body {
       var(--in) * var(--in) * (3 - 2 * var(--in)) *
         (1 - var(--out) * var(--out) * (3 - 2 * var(--out)))
     );
-    /* Geometry, anchored to the centre card. `--cw` is that card's
-       width, `--sw` the two satellites', and `--tuck` how far a
-       satellite reaches back across the centre card's edge — so the
-       three stay attached at the corners even on a wide panel, where
-       the rem caps stop the cards scaling with it.
-
-       `--dy` is the vertical step, a clamped vh: sized so the lap lands
-       on the padding at the foot of the card above and stops there. The
-       cards carry no heading, so the body copy runs to the bottom edge
-       and a deeper lap eats it — a corner attachment, not a card
-       swallowing its neighbour's only sentence. The floor is set by the
-       shortest viewport the pinned layout runs at: the lap can only
-       close so far before the cluster is taller than the panel, and
-       padding buys nothing (it grows the cards as fast as it grows the
-       clearance). */
-    --cw: min(56%, 26rem);
-    --sw: min(48%, 22rem);
-    --tuck: 13rem;
-    --dy: clamp(13.5rem, 24vh, 14.5rem);
+    /* All three share one width and one fixed height. The height has to
+       be fixed, not content-driven: each card is an absolutely
+       positioned sibling (a glass panel has to be a DIRECT child of the
+       scene root, so they can't sit inside a flex/grid stack that would
+       size them off each other's real height), so `top` is computed from
+       `--card-h` and `--gap` alone. Sized for the tallest card
+       (Fragmented learning's 2×2 grid) with room to spare; shorter
+       content just centres in the extra space via the existing
+       `flex flex-col justify-center`-less padding. */
+    --cw: min(62%, 27rem);
+    --card-h: clamp(14rem, 24vh, 15.5rem);
+    --gap: clamp(0.5rem, 1.5vh, 1.5rem);
     opacity: clamp(0, calc(1 - var(--e) * 2.5), 1);
     translate: calc(52vw * (1 - var(--reveal))) -50%;
   }
 
-  /* 02 — centred on the canvas, and the anchor the other two hang off. */
-  .stage-card-mid {
+  .stage-card-1,
+  .stage-card-2,
+  .stage-card-3 {
     left: calc(50% - var(--cw) / 2);
-    top: 50%;
     width: var(--cw);
+    height: var(--card-h);
+    justify-content: center;
   }
 
-  /* 01 — attached at the centre card's top right. */
-  .stage-card-tr {
-    left: calc(50% + var(--cw) / 2 - var(--tuck));
-    top: calc(50% - var(--dy));
-    width: var(--sw);
+  /* Centred as a group: the middle card sits on the panel's own centre,
+     the other two step away from it by one card-height-plus-gap each,
+     so the three stay symmetric around 50% however tall the card is. */
+  .stage-card-1 {
+    top: calc(50% - var(--card-h) - var(--gap));
   }
 
-  /* 03 — and its mirror at the bottom left. The two insets come out
-     symmetrical on their own: the same tuck measured from opposite
-     edges of a centred box. */
-  .stage-card-bl {
-    left: calc(50% - var(--cw) / 2 + var(--tuck) - var(--sw));
-    top: calc(50% + var(--dy));
-    width: var(--sw);
+  .stage-card-2 {
+    top: 50%;
+  }
+
+  .stage-card-3 {
+    top: calc(50% + var(--card-h) + var(--gap));
   }
 
   /* ── The benchmark plot ────────────────────────────────────────────
@@ -554,6 +549,21 @@ body {
   stroke: color-mix(in srgb, var(--color-accent-100) 85%, var(--color-paper) 15%);
   stroke-opacity: 1;
   stroke-width: 4.2;
+}
+
+/* The real spread each strategy ran inside, wiped in left-to-right on
+   the SAME clock as its own line (`--from`/`--dur`, shared via the
+   parent's style) — a fill can't use the pathLength/dash trick a stroke
+   can, so this reveals by clipping its own width instead, same
+   technique as `.plot-optimum`. */
+.plot-band {
+  --draw: clamp(0, calc((var(--t) - var(--from)) / var(--dur)), 1);
+  fill: color-mix(in srgb, var(--color-paper) 8%, transparent);
+  clip-path: inset(0 calc((1 - var(--draw)) * 100%) 0 0);
+}
+
+[data-lead="true"] .plot-band {
+  fill: color-mix(in srgb, var(--color-accent-100) 14%, transparent);
 }
 
 .plot-label {
