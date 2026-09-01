@@ -108,7 +108,14 @@ export function GlassButton({
       {backdrop}
       <Glass variant={variant} className="glass-button relative">
         {href ? (
-          <a href={href} target={target} rel={rel} aria-label={ariaLabel} className="block">
+          <a
+            href={href}
+            target={target}
+            rel={rel}
+            onClick={onClick}
+            aria-label={ariaLabel}
+            className="block"
+          >
             {label}
           </a>
         ) : (

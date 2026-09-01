@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import posthog from "posthog-js";
 import { Glass, GlassButton, GlassPulse, GlassScene } from "@/components/glass";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { BenchmarkPlot } from "./BenchmarkPlot";
@@ -561,6 +562,7 @@ function HeroCopy() {
           variant="dark"
           backdropClassName="rounded-full glass-button-slab-accent"
           delayMs={1950}
+          onClick={() => posthog.capture("book_call_clicked", { location: "hero" })}
         >
           Book a call
         </GlassButton>
@@ -760,6 +762,7 @@ function Closing() {
           href="https://calendar.app.google/S4eAAiz6Nn8kGZpJ9"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => posthog.capture("book_call_clicked", { location: "closing" })}
           className="mt-8 inline-flex items-center justify-center rounded-full bg-accent px-7 py-3.5 font-serif text-sm font-bold text-paper transition-colors duration-150 ease-in hover:bg-accent-700"
         >
           Book a call
