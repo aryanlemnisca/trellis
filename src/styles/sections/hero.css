@@ -1,0 +1,35 @@
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: min(88vh, 860px); }
+.hero-copy { padding-block: clamp(72px, 10vw, 150px); display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.hero h1 { font-size: clamp(3.4rem, 7.2vw, 6.6rem); line-height: .95; letter-spacing: -.025em; margin-top: 36px; }
+.hero h1 em { display: inline-block; white-space: nowrap; }
+.hero .lead { margin-top: 36px; max-width: 28em; }
+.ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; margin-top: 48px; }
+.hero-fig { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.fig-body { position: relative; flex: 1; min-height: 560px; }
+.fig-body canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/*
+ * Phones and small tablets: the hero is exactly one screen (the small-viewport
+ * height, so it holds when the browser toolbar shows). Copy takes what it needs,
+ * the illustration fills the rest. Nav is 68px tall.
+ */
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: calc(100vh - 68px);
+    min-height: calc(100svh - 68px);
+  }
+  .hero-copy { padding-block: clamp(28px, 6svh, 72px) clamp(20px, 4svh, 48px); }
+  .hero h1 { margin-top: clamp(16px, 3svh, 36px); font-size: clamp(2.9rem, 13.5vw, 4.2rem); }
+  .hero .lead { margin-top: clamp(14px, 2.6svh, 36px); }
+  .ctas { margin-top: clamp(20px, 3.6svh, 48px); }
+  .hero-fig { border-top: 1px solid var(--color-rule); }
+  .fig-body { min-height: 0; }
+}
+/* Very short screens (iPhone SE and landscape phones): tighten further */
+@media (max-width: 900px) and (max-height: 700px) {
+  .hero .lead { font-size: 15px; line-height: 1.5; }
+  .hero .btn { padding: 14px 18px; }
+  .fig-body { min-height: 200px; }
+}

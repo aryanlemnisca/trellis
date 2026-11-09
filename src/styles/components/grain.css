@@ -1,0 +1,11 @@
+/* Film grain over a coloured panel. Add .grain to the panel; pick a blend variant. */
+.grain { position: relative; isolation: isolate; }
+.grain::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  background-image: var(--image-grain);
+  mix-blend-mode: soft-light; opacity: .55;
+}
+.grain-dark::after { mix-blend-mode: screen; opacity: .16; filter: invert(1); }
+.grain-multiply::after { mix-blend-mode: multiply; opacity: .22; }
+/* The canvas painted behind a panel by src/scripts/lib/fields.js */
+.field-cv { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }

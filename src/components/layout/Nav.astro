@@ -1,0 +1,16 @@
+---
+import logo from '../../data/logo.js';
+import { site } from '../../data/site.js';
+---
+<header class="nav" id="top">
+  <div class="in gut">
+    <a href="#top" aria-label="Trellis home"><img src={logo} alt="Trellis" width="104" height="28" decoding="async" /></a>
+    <nav aria-label="Primary">
+      <ul>
+        {site.nav.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+    <a class="btn btn-ink" href={site.cta.href}>{site.cta.label}</a>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>

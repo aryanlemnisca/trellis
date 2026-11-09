@@ -1,110 +1,111 @@
-# Trellis — landing page
+# Lemnisca / Trellis site
 
-The marketing site for **Trellis by Lemnisca**: a bioprocess development
-platform that builds one evolving model of a process from plate to pilot to
-production, so each experiment adds evidence for the next decision.
+Marketing site for **Trellis**. Astro + Tailwind CSS v4, plain CSS and ES modules, no framework runtime.
+Dev: <https://lemnisca.dev.corevoice.in> (auto-deploys from `dev`).
 
-One page. A hero, a three-chapter scroll narrative, an FAQ and a footer.
+> **Need it as one file?** There is also a standalone, all-in-one HTML build at [`standalone/index.html`](standalone/index.html): just upload it to any static host. See [Standalone single file](#standalone-single-file).
 
-## Running it
+## Commands
 
-Requires **Node 20+**.
+Needs Node >= 22.23.4 (Astro 7).
 
 ```bash
 npm install
-npm run dev
+npm run dev          # http://localhost:4321
+npm run build        # -> dist/
+npm run check        # build + SEO/AEO gate (scripts/check-seo.mjs)
+npm run make:og      # regenerate public/og.png (after changing headline/logo)
+npm run build:standalone   # -> standalone/index.html (whole site in one file)
 ```
 
-Then open <http://localhost:3000>.
+Copy `.env.example` to `.env` for local work (the form needs `PUBLIC_DEMO_FORM_HOOK`).
 
-| script | what it does |
-| --- | --- |
-| `npm run dev` | dev server (Turbopack) |
-| `npm run build` | production build |
-| `npm start` | serve the production build |
-| `npm run lint` | ESLint |
+## Standalone single file
 
-There is no test suite and no environment configuration — the site is entirely
-static and has no backend, no analytics and no third-party services.
+`standalone/index.html` is the whole site in **one file** (CSS, JS, fonts, logo, favicon inlined, ~230 KB, no external requests). Upload it as `index.html` to any static host.
 
-## The stack
+- It is generated from the same source: run `npm run build:standalone` and commit the result. Do not edit it by hand.
+- The demo-form webhook is baked in from `.env` (`PUBLIC_DEMO_FORM_HOOK`), by choice. To point the file elsewhere without rebuilding, fill the `<meta name="demo-form-hook" content="">` tag near the top.
+- Canonical and share-image URLs point at `SITE_URL` (default the dev host) and the page is `noindex`. For a real domain rebuild with `SITE_URL=https://example.com SITE_INDEXABLE=true npm run build:standalone`. The share image (`og:image`) is not inlined: host `public/og.png` at that domain.
 
-- **Next.js 16** (App Router, Turbopack) and **React 19**
-- **Tailwind v4**, configured in CSS — there is no `tailwind.config`; the
-  design tokens live in the `@theme` block at the top of `app/globals.css`
-- **Inter**, self-hosted from `public/fonts` and declared in `app/fonts.css`
-- **[`@ybouane/liquidglass`](https://liquid-glass.ybouane.com)** for the WebGL
-  glass panels
+## Deploy
 
-`patch-package` is a devDependency only so that liquidglass's `postinstall`
-doesn't fail a clean `npm install` (or a Vercel build). There are no patches.
+| Branch | Goes to | How |
+| --- | --- | --- |
+| `dev` | https://lemnisca.dev.corevoice.in | push -> GitHub Actions builds -> `dist/` streamed over a pinned-command SSH key to `dev-sites` on the Docker box |
+| `main` | production | **not wired yet**: no production host/domain decided |
 
-## How the page is built
+Promote with a PR `dev` -> `main`. Never push straight to `main`. Workflow: [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
+Pattern and server side: `cv-server-infra` -> `docs/staging.md`.
+
+**One-time setup for a new dev site** (done by hand, once):
+
+1. Deploy key for this site only, in `authorized_keys` on `64.227.184.151` with `command="/opt/dev-sites/receive.sh lemnisca"`.
+2. Repo secrets `DEPLOY_SSH_KEY_DEV` and `DEPLOY_HOST_DEV=64.227.184.151`; repo variable `PUBLIC_DEMO_FORM_HOOK`.
+3. Two `dev-lemnisca` Traefik router blocks in Portainer stack **35 `dev-sites`**, then redeploy it (copy an existing `dev-<site>` pair).
+4. UptimeRobot monitor and status-page entry (`cv-server-infra` -> `docs/monitoring.md`).
+
+`*.dev.corevoice.in` is a wildcard A record, so no DNS change is needed. Dev is open but noindex.
+
+**Going to production** needs: a host + domain, a `production` job in the workflow, and a build with
+`SITE_URL=https://<domain>` and `SITE_INDEXABLE=true`. Until then every build is `noindex` and `robots.txt` disallows all.
+
+## Environment
+
+| Variable | Used for | Default |
+| --- | --- | --- |
+| `PUBLIC_DEMO_FORM_HOOK` | webhook that receives the "Book a demo" form (baked into the client JS and the standalone file, so it is public) | empty: form shows "not connected" |
+| `SITE_URL` | canonical URLs, sitemap, OG tags | `https://lemnisca.dev.corevoice.in` |
+| `SITE_INDEXABLE` | `true` = indexable; anything else = noindex everywhere | `false` |
+| `BASE_PATH` | serve under a sub-path | `/` |
+
+## Everyday tasks
+
+**Change copy or SEO text:** `src/data/site.js` (title, description, nav), `src/data/faq.js`, `src/data/principles.js`. The page, JSON-LD, sitemap and `llms.txt` all read these, so they cannot drift. Run `npm run check`.
+
+**Add a section:** create `src/components/sections/X.astro` and `src/styles/sections/x.css`, import the CSS in `src/styles/main.css`, add the component to `src/pages/index.astro`. A scene with canvas: `src/scripts/sections/x.js` exporting `initX()`, called from `src/scripts/pages/home.js`.
+
+**Add a page:** `src/pages/<name>.astro` using `<Base path="/<name>">`; add its path to `PAGES` in `src/pages/sitemap.xml.ts`. Global behaviour (Lenis, reveal, nav) comes with `Base`; page scripts go in `src/scripts/pages/`.
+
+**Change a colour or font:** `src/styles/theme.css` only. Tokens are also Tailwind utilities (`bg-paper`, `text-ink-2`, `font-mono`).
+
+**Animate something in on scroll** (works on any page, no JS to write):
+
+```html
+<h2 data-reveal="up">Heading</h2>
+<p data-reveal="fade" data-reveal-delay="200">Copy</p>
+<ul data-reveal-group="up" data-reveal-stagger="90"> <li>one</li> <li>two</li> </ul>
+```
+
+Types: `up down left right fade scale blur`. Options: `data-reveal-delay`, `-duration`, `-distance` (px), `data-reveal-once="false"` to replay on every entry. Put it on a wrapper, not on a button or card that has its own hover transform. Nothing is hidden if JS is off or the visitor prefers reduced motion.
+
+## Structure
 
 ```
-app/page.tsx
-└── Stage → Faq → Footer
+astro.config.mjs        site URL, base path, Tailwind via @tailwindcss/vite
+public/                 logo, favicon, og.png (static, copied as-is)
+scripts/                check-seo.mjs (CI gate), make-og.mjs, build-standalone.mjs
+standalone/             generated single-file site (index.html)
+src/
+  data/                 site.js, faq.js, principles.js  <- content + SEO source of truth
+  layouts/Base.astro    <head>, skip link, global script
+  components/
+    seo/Seo.astro       meta, Open Graph, JSON-LD (Organization, WebSite, WebPage, SoftwareApplication, FAQPage)
+    layout/             Nav, Footer, SvgDefs
+    sections/           one component per page section
+  pages/                index, sitemap.xml, robots.txt, llms.txt
+  styles/
+    theme.css           design tokens (@theme)
+    base.css            element defaults
+    components/         frame, button, nav, form, reveal, faq ...
+    sections/           one file per section
+    main.css            imports everything into cascade layers
+  scripts/
+    global.js           every page: Lenis smooth scroll, reveal, nav hide-on-scroll
+    pages/home.js       home-page scenes + form
+    lib/                core, fields, draw, smooth-scroll, reveal, nav
+    sections/           one module per scene (canvas drawings)
 ```
 
-**`Stage`** (`components/stage/`) is the hero and the whole scroll narrative as
-one object. A dark "board" panel is pinned from the first frame; it plays the
-hero entrance, holds through three chapters — the problem, the learning loop,
-the benchmark — then shifts into a rounded box for the closing call to action.
-Everything else on the page is white.
-
-Two rules explain most of the code:
-
-- **Scroll is the only clock.** A `requestAnimationFrame` scroll reader writes
-  a handful of custom properties on the section (`--e` for the closing shift,
-  `--p1/--p2/--p3` for each chapter's own progress) and every drawing derives
-  itself from those in CSS. Almost nothing animates on a timer, so scrubbing
-  the scrollbar backwards reverses the page exactly.
-- **Glass constrains the layout.** The renderer only samples a scene root's own
-  direct children and ignores CSS opacity, which is why panels sit where they
-  do and why layers unmount rather than fade.
-
-**`components/glass/`** wraps the library: `GlassScene` is a scene root,
-`Glass` is one refracting panel, and `GlassButton` is a control that brings its
-own scene (each one is a separate WebGL context — use sparingly). Optical
-recipes are named variants in `lib/glass/spec.ts`; pick one rather than
-inventing numbers. Without WebGL the panels fall back to `backdrop-filter`.
-
-Below the `lg` breakpoint none of the pinning applies: the panel sits above the
-copy and each chapter stacks its own drawing.
-
-## Generated files
-
-Two directories are **build output — don't hand-edit them**:
-
-| output | generated by |
-| --- | --- |
-| `public/illustration/*` | `python3 scripts/build-scenes.py` |
-| `app/icon.svg`, `app/favicon.ico`, `app/apple-icon.png` | `node scripts/build-icons.mjs` |
-
-`scripts/build-scenes.py` needs only the Python standard library.
-`scripts/build-icons.mjs` uses `sharp`, which arrives transitively with Next.
-
-Of the scene artwork only the hero drawing (`path-light.png` / `path-ink.png`)
-is still used — every chapter now draws itself in DOM and inline SVG so that
-labels render in Inter and the drawings can reveal against scroll. The
-generator still emits the older `surface.svg` and `overlay-*.svg`; nothing
-references them.
-
-## Before you change anything
-
-**Read [`AGENTS.md`](./AGENTS.md).** It is the design and engineering contract
-for this repo: the palette, the glass rules, how the scroll narrative is wired,
-and — most usefully — a list of things that look like improvements but quietly
-break the page. Several are non-obvious browser behaviour, for example:
-
-- writing a vendor prefix by hand makes the build drop the standard property
-- `backdrop-filter` cannot see past an ancestor with a `transform`
-- the `0fr → 1fr` accordion trick silently collapses in Safari
-
-Every one of those was a real bug here.
-
-## Deploying
-
-Any host that runs a Next.js app. The site is fully static, so `npm run build`
-followed by `npm start` — or a zero-configuration deploy to Vercel — is all it
-needs.
+Design system: tokens in `theme.css` -> cascade layers `theme, base, components, utilities` (see `main.css`), so Tailwind utilities always win over component CSS.
+Scenes only animate while on screen and restart each time they scroll back in (`visLoop` in `lib/core.js`).

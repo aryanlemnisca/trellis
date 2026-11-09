@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import SvgDefs from '../components/layout/SvgDefs.astro';
+import Nav from '../components/layout/Nav.astro';
+import Footer from '../components/layout/Footer.astro';
+import Hero from '../components/sections/Hero.astro';
+import Challenge from '../components/sections/Challenge.astro';
+import Scientist from '../components/sections/Scientist.astro';
+import What from '../components/sections/What.astro';
+import Why from '../components/sections/Why.astro';
+import Case from '../components/sections/Case.astro';
+import Science from '../components/sections/Science.astro';
+import Faq from '../components/sections/Faq.astro';
+import Demo from '../components/sections/Demo.astro';
+---
+<Base path="/">
+  <SvgDefs />
+  <Nav />
+  <div class="frame">
+  <main id="main">
+    <Hero />
+    <Challenge />
+    <Scientist />
+    <What />
+    <Why />
+    <Case />
+    <Science />
+    <Faq />
+    <Demo />
+  </main>
+  <Footer />
+  </div>
+  <script>import '../scripts/pages/home.js';</script>
+</Base>

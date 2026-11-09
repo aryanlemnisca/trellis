@@ -1,0 +1,31 @@
+/* Element defaults on top of Tailwind's preflight. No classes here. */
+html { scroll-behavior: smooth; --nav-h: 69px; transition: --nav-h .45s; }
+html.nav-hidden { --nav-h: 0px; }
+@property --nav-h { syntax: "<length>"; inherits: true; initial-value: 69px; }
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink-2);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+:focus-visible { outline: 2px solid var(--color-orange); outline-offset: 3px; }
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  color: var(--color-ink);
+  margin: 0;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+}
+h2 { font-size: clamp(2.1rem, 4.3vw, 3.6rem); line-height: 1.04; }
+h3 { font-size: 1.55rem; line-height: 1.15; }
+em { font-style: italic; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; }
+}

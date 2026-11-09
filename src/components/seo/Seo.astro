@@ -1,0 +1,95 @@
+---
+import { site } from '../../data/site.js';
+import { faq } from '../../data/faq.js';
+import { principles } from '../../data/principles.js';
+
+interface Props { title?: string; description?: string; path?: string; image?: string; }
+const { title = site.title, description = site.description, path = '/', image = '/og.png' } = Astro.props;
+
+const origin = Astro.site!.origin;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const abs = (p: string) => new URL(base + p, origin).href;
+const canonical = abs(path === '/' ? '/' : path);
+const ogImage = abs(image);
+const robots = site.indexable
+  ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+  : 'noindex, nofollow, noarchive';
+
+/* Structured data. One @graph so entities can reference each other by @id. */
+const graph = [
+  {
+    '@type': 'Organization',
+    '@id': abs('/#organization'),
+    name: site.name,
+    url: abs('/'),
+    logo: { '@type': 'ImageObject', url: abs('/trellis-logo.png'), width: 900, height: 242 },
+  },
+  {
+    '@type': 'WebSite',
+    '@id': abs('/#website'),
+    url: abs('/'),
+    name: site.name,
+    description,
+    inLanguage: site.locale,
+    publisher: { '@id': abs('/#organization') },
+  },
+  {
+    '@type': 'WebPage',
+    '@id': canonical + '#webpage',
+    url: canonical,
+    name: title,
+    description,
+    inLanguage: site.locale,
+    isPartOf: { '@id': abs('/#website') },
+    about: { '@id': abs('/#software') },
+    primaryImageOfPage: { '@type': 'ImageObject', url: ogImage },
+  },
+  {
+    '@type': 'SoftwareApplication',
+    '@id': abs('/#software'),
+    name: site.name,
+    applicationCategory: 'BusinessApplication',
+    applicationSubCategory: 'Bioprocess design of experiments',
+    description,
+    featureList: principles.map((p) => `${p.title}: ${p.text}`),
+    publisher: { '@id': abs('/#organization') },
+    url: abs('/'),
+  },
+  {
+    '@type': 'FAQPage',
+    '@id': canonical + '#faq',
+    mainEntity: faq.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  },
+];
+const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
+---
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta name="robots" content={robots} />
+<meta name="theme-color" content={site.themeColor} />
+<meta name="format-detection" content="telephone=no" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:locale" content="en_US" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Trellis: scale newer heights" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<link rel="icon" href={base + '/favicon.svg'} type="image/svg+xml" />
+<link rel="sitemap" type="application/xml" href={abs('/sitemap.xml')} />
+<link rel="alternate" type="text/plain" href={abs('/llms.txt')} title="llms.txt" />
+<script type="application/ld+json" set:html={jsonLd} />

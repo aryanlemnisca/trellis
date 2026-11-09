@@ -1,0 +1,52 @@
+---
+import { principles } from '../../data/principles.js';
+---
+<section class="sec" id="why" aria-labelledby="why-title" data-nav-hide="small">
+  <div class="why" id="whyTrack" style={`--steps:${principles.length}`}>
+   <div class="why-pin">
+    <div class="why-plate">
+      <div class="stage"><canvas id="whyCv" role="img" aria-label="Animated drawing for the selected principle"></canvas></div>
+    </div>
+
+    <div class="why-list">
+      <div class="why-head gut" data-reveal="up">
+        <h2 id="why-title">Why Trellis</h2>
+      </div>
+      <!-- Desktop: the five principles as a hoverable list -->
+      <div id="prList">
+        {principles.map((p, i) => (
+          <button class={`pr${i === 0 ? ' on' : ''}`} type="button" data-i={i}>
+            <h3><i></i>{p.title}</h3><p>{p.text}</p><span class="bar"></span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+   </div>
+
+    <!-- Phones: the media above, this card floats at the bottom of the screen. Arrows (or a swipe) move both together. -->
+    <div class="why-dock" id="whyDock" role="group" aria-roledescription="carousel" aria-label="Why Trellis">
+      <div class="why-dock-slides" aria-live="polite">
+        {principles.map((p, i) => (
+          <article class={`why-dock-slide${i === 0 ? ' on' : ''}`} aria-hidden={i === 0 ? 'false' : 'true'} aria-label={`${i + 1} of ${principles.length}`}>
+            <h3>{p.title}</h3>
+            <p>{p.text}</p>
+          </article>
+        ))}
+      </div>
+      <div class="why-dock-nav">
+        <button type="button" class="why-arrow" data-dir="-1" aria-label="Previous principle">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 4l-6 6 6 6"/></svg>
+        </button>
+        <div class="why-dots" aria-hidden="true">
+          {principles.map((_, i) => <i class={i === 0 ? 'on' : ''}></i>)}
+        </div>
+        <span class="mono why-count" id="whyDockNo">1 / {principles.length}</span>
+        <button type="button" class="why-arrow" data-dir="1" aria-label="Next principle">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <span class="why-dock-bar" aria-hidden="true"></span>
+    </div>
+  </div>
+</section>

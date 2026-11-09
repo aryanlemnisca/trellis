@@ -1,0 +1,61 @@
+/* Demo form: fields, validation, sending / success / error states. */
+.demo form {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; align-content: start;
+  width: 100%; max-width: 820px; margin: 0 auto;
+  padding: clamp(18px, 2.4vw, 28px);
+  position: relative; z-index: 4; min-width: 0;
+}
+.field { display: flex; flex-direction: column; gap: 10px; padding: 0 0 16px; min-width: 0; }
+.field:nth-child(3) { grid-column: 1 / -1; }
+.demo label { font: 500 13.5px/1.2 var(--font-sans); letter-spacing: .01em; color: var(--color-ink); }
+.demo input {
+  width: 100%; padding: 10px 2px;
+  font: 15px var(--font-sans); color: var(--color-ink);
+  background: transparent; border: 0; border-bottom: 1.5px solid rgba(31, 34, 38, .55); border-radius: 0;
+}
+.demo input::placeholder { color: rgba(31, 34, 38, .45); }
+.demo input:focus { outline: 0; border-bottom-color: var(--color-orange); }
+
+/* validation */
+.msg { margin: 0; min-height: 1.2em; font: 12.5px/1.3 var(--font-sans); color: var(--color-danger); display: flex; gap: 6px; align-items: center; }
+.msg:empty { visibility: hidden; }
+.msg:not(:empty)::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.field.invalid label { color: var(--color-danger); }
+.field.invalid input, .field.invalid input:focus { border-bottom-color: var(--color-danger); }
+.field.valid input:not(:focus) { border-bottom-color: rgba(31, 34, 38, .8); }
+.hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; } /* spam trap */
+
+/* error banner */
+.form-status {
+  grid-column: 1 / -1; display: flex; gap: 12px; align-items: flex-start;
+  margin: 4px 0 14px; padding: 12px 14px;
+  border: 1px solid rgba(181, 70, 42, .35); border-left: 3px solid var(--color-danger);
+  background: rgba(181, 70, 42, .06); color: var(--color-ink); font: 13.5px/1.45 var(--font-sans);
+}
+.form-status svg { width: 18px; height: 18px; flex: none; margin-top: 1px; fill: none; stroke: var(--color-danger); stroke-width: 1.6; stroke-linecap: round; }
+.form-status strong { display: block; font-weight: 500; }
+.form-status span { color: var(--color-ink-2); }
+
+/* submit */
+.form-foot { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 16px; flex-wrap: wrap; padding: 6px 0 0; }
+.form-foot .btn { position: relative; min-width: 190px; justify-content: center; }
+.form-foot .btn:disabled { cursor: progress; background: var(--color-ink); border-color: var(--color-ink); opacity: .82; }
+.btn-spinner { display: none; width: 13px; height: 13px; border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; }
+form[data-state=sending] .btn-spinner { display: inline-block; animation: spin .8s linear infinite; }
+form[data-state=sending] input { opacity: .6; }
+
+/* success card replaces the form */
+form[data-state=success] > :not(.done) { display: none !important; }
+.done {
+  grid-column: 1 / -1; display: flex; gap: 18px; align-items: flex-start;
+  padding: clamp(22px, 3vw, 34px);
+  border: 1px solid var(--color-rule); background: var(--color-paper-hi); outline: 0;
+}
+.done svg { width: 40px; height: 40px; flex: none; fill: none; stroke: var(--color-orange); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.done path { stroke-dasharray: 30; stroke-dashoffset: 0; }
+.done h3 { margin: 4px 0 6px; font: 400 clamp(1.6rem, 2.6vw, 2.1rem)/1.1 var(--font-serif); color: var(--color-ink); }
+.done p { margin: 0; color: var(--color-ink-2); }
+.linkbtn { margin-top: 14px; padding: 0; border: 0; background: none; font: 500 13px var(--font-mono); color: var(--color-ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.linkbtn:hover { color: var(--color-orange); }
+
+@media (max-width: 520px) { .demo form { grid-template-columns: 1fr; } }

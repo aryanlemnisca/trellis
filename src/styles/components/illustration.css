@@ -1,0 +1,14 @@
+/* Line-drawing vocabulary shared by every inline SVG illustration. */
+.ln { fill: none; stroke: var(--color-ink); stroke-width: 1; }
+.dash { fill: none; stroke: var(--color-ink); stroke-width: 1; stroke-dasharray: 2 3; }
+.dot { fill: var(--color-ink); }
+.hol { fill: var(--color-paper-hi); stroke: var(--color-ink); stroke-width: 1; }
+.or { fill: var(--color-orange); }
+.tx { font: 9px var(--font-mono); letter-spacing: .12em; fill: var(--color-ink-3); text-transform: uppercase; }
+.tx-k { font: 9.5px var(--font-mono); letter-spacing: .12em; fill: var(--color-ink); text-transform: uppercase; }
+
+/* Illustrations carry no words, except the four labelled points of the Trellis loop. */
+main svg text { display: none; }
+#what svg text.lbl { display: inline; paint-order: stroke; stroke: var(--color-paper); stroke-width: 4px; stroke-linejoin: round; }
+#what svg text.tx-k.lbl { font-size: 8.6px; }
+@media (max-width: 600px) { #what svg text.tx-k.lbl { font-size: 10px; } }

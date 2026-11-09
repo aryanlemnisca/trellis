@@ -1,0 +1,22 @@
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40;
+  background: rgba(247, 244, 236, .92);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-rule);
+  transition: transform .45s var(--ease-out-expo);
+}
+/* scrolling down: slide fully out of the viewport. Scrolling up: back to 0. */
+.nav.is-hidden { transform: translateY(-100%); }
+.nav .in { max-width: var(--container-wrap); margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; height: 68px; }
+.nav img { height: 28px; width: auto; display: block; }
+.nav nav { display: contents; }
+.nav ul { display: flex; gap: 26px; list-style: none; margin: 0; padding: 0; }
+.nav ul a { text-decoration: none; font-size: 15px; color: var(--color-ink); }
+.nav ul a { position: relative; transition: color .25s; }
+.nav ul a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -7px; height: 2px; background: var(--color-orange); transform: scaleX(0); transform-origin: left; transition: transform .4s var(--ease-out-expo); }
+.nav ul a:hover, .nav ul a.is-active { color: var(--color-orange); }
+.nav ul a.is-active::after { transform: scaleX(1); }
+.nav .btn { padding: 12px 16px; font-size: 12px; }
+.progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; background: var(--color-orange); transform-origin: 0 50%; transform: scaleX(0); }
+@media (max-width: 960px) { .nav ul { display: none; } }
+@media (max-width: 400px) { .nav img { height: 22px; } .nav .btn { padding: 10px 12px; letter-spacing: .06em; } }

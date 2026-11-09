@@ -1,0 +1,17 @@
+/* The one dark plate: breaks the rhythm. */
+.dark { background: var(--color-night-deep); color: var(--color-night-ink); }
+.dark h2 { color: var(--color-night-ink); }
+.dark .mono { color: rgba(241, 234, 214, .55); }
+.dark .lead { color: rgba(241, 234, 214, .78); }
+.dark .label i { background: var(--color-orange); }
+.dark.sec::before, .dark.sec::after { background: var(--color-paper); }
+.dark .viz { border-left-color: rgba(241, 234, 214, .1); }
+
+/* the dot field fills the whole panel, copy sits above it */
+#scientist .split { min-height: min(92vh, 760px); }
+#scientist #dotViz { position: absolute; inset: 0; border: 0; min-height: 0; z-index: 0; }
+#scientist .copy { position: relative; z-index: 2; }
+@media (max-width: 900px) {
+  #scientist .split { min-height: 0; }
+  #scientist #dotViz { position: relative; inset: auto; aspect-ratio: 1 / 1; border-top: 0; }
+}

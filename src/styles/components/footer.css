@@ -1,0 +1,7 @@
+footer .in { display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; padding-block: 44px 52px; }
+footer img { height: 24px; width: auto; display: block; }
+footer .legal { margin-top: 28px; }
+footer nav { display: flex; gap: 56px; flex-wrap: wrap; }
+footer nav div { display: flex; flex-direction: column; gap: 8px; }
+footer nav a { text-decoration: none; color: var(--color-ink); }
+footer nav a:hover { color: var(--color-orange); }

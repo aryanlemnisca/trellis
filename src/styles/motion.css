@@ -1,0 +1,13 @@
+/* All keyframes and animation hooks. Nothing here runs under prefers-reduced-motion. */
+@media (prefers-reduced-motion: no-preference) {
+  /* form feedback */
+  .done:not([hidden]) path { animation: donecheck .5s .15s ease-out both; }
+  .done:not([hidden]) { animation: donein .35s ease-out; }
+  .form-status:not([hidden]) { animation: donein .25s ease-out; }
+  .field.shake input { animation: shake .32s; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes donecheck { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+  @keyframes donein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+}

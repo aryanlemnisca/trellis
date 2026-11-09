@@ -1,0 +1,43 @@
+/*
+ * Entry stylesheet. Tailwind v4 is loaded the recommended way (CSS-first, via
+ * @tailwindcss/vite). Cascade layers, lowest to highest priority:
+ *
+ *   theme      design tokens (theme.css)                     -> also become utilities
+ *   base       Tailwind preflight + our element defaults     (base.css)
+ *   components reusable patterns + one file per section      (components/, sections/)
+ *   utilities  Tailwind utility classes (p-4, text-ink ...)  always win
+ *
+ * To add a section: create sections/<name>.css, import it below.
+ */
+@import "tailwindcss";
+@import "./theme.css";
+
+/* self-hosted fonts (no third-party request, no layout shift from a late stylesheet) */
+@import "@fontsource/geist/400.css";
+@import "@fontsource/geist/500.css";
+@import "@fontsource/geist-mono/400.css";
+@import "@fontsource/geist-mono/500.css";
+
+@import "./base.css" layer(base);
+
+@import "./components/frame.css" layer(components);
+@import "./components/typography.css" layer(components);
+@import "./components/button.css" layer(components);
+@import "./components/grain.css" layer(components);
+@import "./components/illustration.css" layer(components);
+@import "./components/nav.css" layer(components);
+@import "./components/footer.css" layer(components);
+@import "./components/form.css" layer(components);
+@import "./components/reveal.css" layer(components);
+@import "./components/faq.css" layer(components);
+
+@import "./sections/hero.css" layer(components);
+@import "./sections/split.css" layer(components);
+@import "./sections/scientist.css" layer(components);
+@import "./sections/what.css" layer(components);
+@import "./sections/why.css" layer(components);
+@import "./sections/case.css" layer(components);
+@import "./sections/science.css" layer(components);
+@import "./sections/demo.css" layer(components);
+
+@import "./motion.css" layer(components);

@@ -1,0 +1,23 @@
+---
+import '../styles/main.css';
+import Seo from '../components/seo/Seo.astro';
+import { site } from '../data/site.js';
+
+interface Props { title?: string; description?: string; path?: string; image?: string; }
+const props = Astro.props;
+---
+<!doctype html>
+<html lang={site.locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <Seo {...props} />
+    <!-- lets CSS hide [data-reveal] content only when scripts are running -->
+    <script is:inline>document.documentElement.classList.add('js')</script>
+  </head>
+  <body>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-paper">Skip to content</a>
+    <slot />
+    <script>import '../scripts/global.js';</script>
+  </body>
+</html>

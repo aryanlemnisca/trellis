@@ -1,0 +1,15 @@
+---
+import logo from '../../data/logo.js';
+import { site } from '../../data/site.js';
+---
+<footer class="sec">
+  <div class="in gut">
+    <div><img src={logo} alt="Trellis" width="104" height="28" decoding="async" loading="lazy" /><p class="mono legal">© {new Date().getFullYear()} Trellis</p></div>
+    <nav aria-label="Footer">
+      <div>
+        {site.nav.map((l) => <a href={l.href}>{l.label}</a>)}
+        <a href={site.cta.href}>{site.cta.label}</a>
+      </div>
+    </nav>
+  </div>
+</footer>

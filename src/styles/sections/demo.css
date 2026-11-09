@@ -1,0 +1,7 @@
+/* Book a demo: a centred card over a painted colour field */
+#demo { border-top-color: transparent; background: var(--color-paper-warm); }
+.demo {
+  display: grid; grid-template-columns: 1fr;
+  padding-block: clamp(24px, 2.8vw, 40px); padding-inline: var(--spacing-gutter);
+  border-block: 1px solid rgba(31, 34, 38, .08);
+}
