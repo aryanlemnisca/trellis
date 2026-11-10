@@ -6,7 +6,7 @@ Astro 7 + Tailwind v4 static site. README has commands, deploy and structure. Re
 
 - Branches: `dev` is where work lands and auto-deploys to https://lemnisca.dev.corevoice.in. Production is `main`, **not wired yet**. Never push straight to `main`. Naming and commits follow `cv-server-infra` -> `docs/standards/repos.md` (Conventional Commits, caveman style, subject <= 50 chars).
 - Do not commit or push unless the user says so.
-- Content and SEO text live in `src/data/*`; never hard-code titles, FAQ or nav in components.
+- Content and SEO text live in `src/data/*`; never hard-code titles or nav in components.
 - Colours and fonts live in `src/styles/theme.css` only. No hex values in section CSS.
 - New animation on scroll: use `data-reveal` attributes (README), not new JS.
 - Canvas scenes must go through `visLoop` (core.js) so they pause off-screen and restart on re-entry.

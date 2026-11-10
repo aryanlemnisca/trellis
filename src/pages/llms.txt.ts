@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { site } from '../data/site.js';
-import { faq } from '../data/faq.js';
 import { principles } from '../data/principles.js';
 
 /*
@@ -19,11 +18,8 @@ export const GET: APIRoute = ({ site: origin }) => {
     ...principles.map((p) => `- ${p.title}: ${p.text}`),
     '',
     '## Pages',
-    `- [Home](${url('/')}): overview, case study, FAQ and demo request`,
+    `- [Home](${url('/')}): overview, case study and demo request`,
     `- [Book a demo](${url('/#demo')}): request a demo`,
-    '',
-    '## FAQ',
-    ...faq.flatMap(({ q, a }) => [`### ${q}`, a, '']),
   ].join('\n');
   return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 };

@@ -41,8 +41,7 @@ export function initBioprocess(){
     ctx.clearRect(0,0,w,h);
     /* the camera: once the section is in view, the bioreactor stands in side view for a moment, then tilts on its own to look
        straight down; it plays again each time the section comes back into view */
-    {const rc=viz.getBoundingClientRect(),vh=innerHeight||800,inV=rc.top<vh*.85&&rc.bottom>vh*.15;
-      if(inV&&G.seen==null)G.seen=t;if(rc.bottom<0||rc.top>vh){G.seen=null;G.tilt=0;}
+    {if(G.seen==null&&t>0)G.seen=t; /* draw only runs while most of the plate is on screen, so the first live frame is the start (t=0 is the static first paint) */
       G.tilt=RM?.55:G.seen==null?0:clamp((t-G.seen-.9)/1.6,0,1);}
     const k=G.tilt*G.tilt*(3-2*G.tilt),phi=(13+77*k)*Math.PI/180,sn=Math.sin(phi),co=Math.cos(phi),side=1-k,Hc=R*(w>=500?1.9:1.45),Lz=Hc*.32;
     const P=(x,y,z)=>[x,cy+(y-cy)*sn-z*co],cz=(c,t)=>c.z*(Hc/(R*1.15))*.5+Math.sin(t*.6+c.ph)*R*.03;
@@ -143,10 +142,11 @@ export function initBioprocess(){
       /* a reaction arriving */
       const lit=G.pulses.some(p0=>t-p0>1&&t-p0<1.2);ctx.beginPath();ctx.arc(wx+ww-9,wy+tb/2,3,0,7);ctx.fillStyle=lit?'rgb(46,150,84)':'rgba(31,34,38,.15)';ctx.fill();}
   }
+  const THR=Math.min(.6,innerHeight*.9/Math.max(1,viz.offsetHeight)); /* play once ~60% of the plate is on screen (less if the plate is taller than the window) */
   setup();
   if(RM){for(let i=0;i<600;i++){last=i/60;step(1/60,i/60);} }
-  visLoop(viz,draw,{restart:false}); /* cells and reactions carry absolute timestamps, so its clock must not reset */
+  visLoop(viz,draw,{restart:false,threshold:THR}); /* cells and reactions carry absolute timestamps, so its clock must not reset */
   /* replay from the standing view every time the section comes back: reset as soon as it leaves the screen */
-  if('IntersectionObserver'in window)new IntersectionObserver(e=>{if(e[e.length-1].intersectionRatio<.2&&G){G.seen=null;G.tilt=0;}},{threshold:[0,.2]}).observe(viz);
+  if('IntersectionObserver'in window)new IntersectionObserver(e=>{if(e[e.length-1].intersectionRatio<THR&&G){G.seen=null;G.tilt=0;}},{threshold:[0,THR]}).observe(viz);
   let lw=innerWidth;addEventListener('resize',()=>{if(innerWidth===lw)return;lw=innerWidth;setup();});
 }

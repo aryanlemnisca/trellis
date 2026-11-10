@@ -12,7 +12,7 @@ function fit(c){const d=Math.min(devicePixelRatio||1,2),w=c.clientWidth,h=c.clie
  * Scenes that keep time-stamped state of their own (the bioprocess cells and reactions) pass
  * {restart:false}: their clock keeps running and they manage their own restart.
  */
-function visLoop(el,draw,{restart=true}={}){
+function visLoop(el,draw,{restart=true,threshold=.05}={}){
   let vis=false,raf=0,t0=performance.now();
   const target=el.matches('canvas,svg')?el:(el.querySelector('canvas,svg')||el);
   const fade=!RM;
@@ -27,7 +27,7 @@ function visLoop(el,draw,{restart=true}={}){
       if(now===vis)return;vis=now;cancelAnimationFrame(raf);
       if(vis){if(restart)t0=performance.now();if(fade)target.style.opacity='1';if(!RM)raf=requestAnimationFrame(tick);}
       else if(fade)target.style.opacity='0';
-    },{threshold:.05}).observe(el);
+    },{threshold}).observe(el);
   }else{vis=true;if(fade)target.style.opacity='1';}
   frame(RM?999:0);}
 

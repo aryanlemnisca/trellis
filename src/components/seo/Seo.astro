@@ -1,6 +1,5 @@
 ---
 import { site } from '../../data/site.js';
-import { faq } from '../../data/faq.js';
 import { principles } from '../../data/principles.js';
 
 interface Props { title?: string; description?: string; path?: string; image?: string; }
@@ -54,15 +53,6 @@ const graph = [
     featureList: principles.map((p) => `${p.title}: ${p.text}`),
     publisher: { '@id': abs('/#organization') },
     url: abs('/'),
-  },
-  {
-    '@type': 'FAQPage',
-    '@id': canonical + '#faq',
-    mainEntity: faq.map(({ q, a }) => ({
-      '@type': 'Question',
-      name: q,
-      acceptedAnswer: { '@type': 'Answer', text: a },
-    })),
   },
 ];
 const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });

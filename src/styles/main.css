@@ -29,7 +29,6 @@
 @import "./components/footer.css" layer(components);
 @import "./components/form.css" layer(components);
 @import "./components/reveal.css" layer(components);
-@import "./components/faq.css" layer(components);
 
 @import "./sections/hero.css" layer(components);
 @import "./sections/split.css" layer(components);

@@ -61,7 +61,7 @@ Pattern and server side: `cv-server-infra` -> `docs/staging.md`.
 
 ## Everyday tasks
 
-**Change copy or SEO text:** `src/data/site.js` (title, description, nav), `src/data/faq.js`, `src/data/principles.js`. The page, JSON-LD, sitemap and `llms.txt` all read these, so they cannot drift. Run `npm run check`.
+**Change copy or SEO text:** `src/data/site.js` (title, description, nav), `src/data/principles.js`. The page, JSON-LD, sitemap and `llms.txt` all read these, so they cannot drift. Run `npm run check`.
 
 **Add a section:** create `src/components/sections/X.astro` and `src/styles/sections/x.css`, import the CSS in `src/styles/main.css`, add the component to `src/pages/index.astro`. A scene with canvas: `src/scripts/sections/x.js` exporting `initX()`, called from `src/scripts/pages/home.js`.
 
@@ -87,17 +87,17 @@ public/                 logo, favicon, og.png (static, copied as-is)
 scripts/                check-seo.mjs (CI gate), make-og.mjs, build-standalone.mjs
 standalone/             generated single-file site (index.html)
 src/
-  data/                 site.js, faq.js, principles.js  <- content + SEO source of truth
+  data/                 site.js, principles.js  <- content + SEO source of truth
   layouts/Base.astro    <head>, skip link, global script
   components/
-    seo/Seo.astro       meta, Open Graph, JSON-LD (Organization, WebSite, WebPage, SoftwareApplication, FAQPage)
+    seo/Seo.astro       meta, Open Graph, JSON-LD (Organization, WebSite, WebPage, SoftwareApplication)
     layout/             Nav, Footer, SvgDefs
     sections/           one component per page section
   pages/                index, sitemap.xml, robots.txt, llms.txt
   styles/
     theme.css           design tokens (@theme)
     base.css            element defaults
-    components/         frame, button, nav, form, reveal, faq ...
+    components/         frame, button, nav, form, reveal ...
     sections/           one file per section
     main.css            imports everything into cascade layers
   scripts/

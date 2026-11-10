@@ -13,7 +13,6 @@ export const site = {
     { label: 'What is Trellis', href: '#what' },
     { label: 'Why Trellis', href: '#why' },
     { label: 'Case study', href: '#case' },
-    { label: 'FAQ', href: '#faq' },
   ],
   cta: { label: 'Book a demo →', href: '#demo' },
 };

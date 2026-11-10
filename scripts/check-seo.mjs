@@ -2,8 +2,7 @@
  * SEO / AEO gate. Run after `astro build` (npm run check). Fails the build on:
  * missing title/description/canonical, wrong title or description length, not
  * exactly one <h1>, skipped heading levels, <img> without alt, broken #anchors,
- * unparseable or inconsistent JSON-LD, FAQ schema that does not match the visible
- * FAQ, and robots/sitemap/llms.txt that disagree with the page's indexability.
+ * unparseable or inconsistent JSON-LD, and robots/sitemap/llms.txt that disagree with the page's indexability.
  */
 import { readFileSync, existsSync } from 'node:fs';
 
@@ -46,12 +45,7 @@ must(blocks.length >= 1, 'no JSON-LD found');
 let graph = [];
 try { graph = JSON.parse(blocks[0])['@graph'] || []; } catch (e) { errors.push('JSON-LD does not parse: ' + e.message); }
 const types = graph.map((n) => n['@type']);
-for (const t of ['Organization', 'WebSite', 'WebPage', 'SoftwareApplication', 'FAQPage']) must(types.includes(t), `JSON-LD missing ${t}`);
-const faqNode = graph.find((n) => n['@type'] === 'FAQPage');
-const visibleQs = [...html.matchAll(/<details class="faq-item"[^>]*>\s*<summary><h3>([^<]*)<\/h3>/g)].map((m) => m[1].trim());
-const schemaQs = (faqNode?.mainEntity || []).map((q) => q.name);
-must(visibleQs.length > 0, 'no visible FAQ found');
-must(JSON.stringify(visibleQs) === JSON.stringify(schemaQs), 'FAQPage JSON-LD questions differ from the visible FAQ');
+for (const t of ['Organization', 'WebSite', 'WebPage', 'SoftwareApplication']) must(types.includes(t), `JSON-LD missing ${t}`);
 
 // indexability must agree everywhere
 const indexable = process.env.SITE_INDEXABLE === 'true';
@@ -67,4 +61,4 @@ if (!indexable) warns.push('built as NOINDEX (dev/preview). Production needs SIT
 
 for (const w of warns) console.log('  note:', w);
 if (errors.length) { console.error(`\nSEO check FAILED (${errors.length}):`); errors.forEach((e) => console.error('  x', e)); process.exit(1); }
-console.log(`SEO check passed: ${title.length}-char title, ${desc.length}-char description, ${schemaQs.length} FAQ items, ${types.length} schema types, ${indexable ? 'indexable' : 'noindex'}.`);
+console.log(`SEO check passed: ${title.length}-char title, ${desc.length}-char description, ${types.length} schema types, ${indexable ? 'indexable' : 'noindex'}.`);
